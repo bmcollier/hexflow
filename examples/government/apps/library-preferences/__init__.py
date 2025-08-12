@@ -1,0 +1,1 @@
+"""Library preferences selection for library card application."""

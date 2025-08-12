@@ -1,0 +1,1 @@
+"""Personal details collection for library card application."""

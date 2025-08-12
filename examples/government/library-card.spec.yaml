@@ -1,0 +1,151 @@
+workflow:
+  name: library-card-application
+  description: >
+    Government service for UK residents to apply for a public library card online.
+    Workflow collects personal details, library preferences, and terms acceptance
+    before assigning a library card number.
+  timeout: 300
+  retry_attempts: 3
+  parallel_execution: false
+
+apps:
+  - id: personal-details
+    name: personal-details
+    skeleton: casa
+    port: 8001
+    entry_point: true
+    fields:
+      - name: full_name
+        label: Full name
+        type: text
+        required: true
+      - name: date_of_birth
+        label: Date of birth
+        type: date
+        required: true
+      - name: email
+        label: Email address
+        type: email
+        required: true
+      - name: phone
+        label: Phone number
+        type: tel
+        required: true
+      - name: street
+        label: Street
+        type: text
+        required: true
+      - name: city
+        label: Town or city
+        type: text
+        required: true
+      - name: postcode
+        label: Postcode
+        type: text
+        required: true
+        validation_pattern: "^[A-Z]{1,2}[0-9][A-Z0-9]?\\s?[0-9][A-Z]{2}$"
+        validation_message: "Please enter a valid UK postcode"
+      - name: proof_doc_type
+        label: Proof of address document type
+        type: select
+        required: true
+        options:
+          - value: council_tax
+            text: Council tax bill
+          - value: utility_bill
+            text: Utility bill
+          - value: bank_statement
+            text: Bank statement
+
+  - id: library-preferences
+    name: library-preferences
+    skeleton: casa
+    port: 8002
+    fields:
+      - name: preferred_branch
+        label: Preferred library branch for collection
+        type: select
+        required: true
+        options_source: router_config
+      - name: comms_pref
+        label: Communication preference
+        type: select
+        required: true
+        options:
+          - value: email
+            text: Email
+          - value: sms
+            text: SMS
+          - value: post
+            text: Post
+      - name: interests
+        label: Interest categories
+        type: select
+        required: false
+        multiple: true
+      - name: accessibility
+        label: Accessibility requirements
+        type: textarea
+        required: false
+
+  - id: terms-and-conditions
+    name: terms-and-conditions
+    skeleton: casa
+    port: 8003
+    fields:
+      - name: data_protection
+        label: I agree to the data protection statement
+        type: checkbox
+        required: true
+        value: accepted
+      - name: code_of_conduct
+        label: I accept the library code of conduct
+        type: checkbox
+        required: true
+        value: accepted
+      - name: info_accuracy
+        label: I confirm my information is accurate
+        type: checkbox
+        required: true
+        value: accepted
+      - name: marketing_opt_in
+        label: I would like to receive marketing updates
+        type: checkbox
+        required: false
+        value: subscribed
+
+  - id: application-confirmation
+    name: application-confirmation
+    skeleton: http_base
+    port: 8004
+
+flow:
+  - from: personal-details
+    to: library-preferences
+    trigger: completion
+  - from: library-preferences
+    to: terms-and-conditions
+    trigger: completion
+  - from: terms-and-conditions
+    to: application-confirmation
+    trigger: completion
+
+data_mapping:
+  - from: personal-details
+    to: library-preferences
+    fields:
+      - full_name
+      - email
+      - postcode
+  - from: personal-details
+    to: application-confirmation
+    fields: "*"
+  - from: library-preferences
+    to: application-confirmation
+    fields: "*"
+  - from: terms-and-conditions
+    to: application-confirmation
+    fields: "*"
+
+conditions:
+  # No conditional routing yet; reserved for future use

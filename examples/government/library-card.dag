@@ -1,0 +1,47 @@
+name: "library-card-application"
+description: "UK Public Library Card Application Service - Three-step application process"
+
+apps:
+  - name: "personal-details"
+    port: 8001
+    entry_point: true
+    
+  - name: "library-preferences" 
+    port: 8002
+    
+  - name: "terms-conditions"
+    port: 8003
+    
+  - name: "application-confirmation"
+    port: 8004
+
+flow:
+  - from: "personal-details"
+    to: "library-preferences"
+    trigger: "completion"
+    
+  - from: "library-preferences"
+    to: "terms-conditions"
+    trigger: "completion"
+    
+  - from: "terms-conditions"
+    to: "application-confirmation"
+    trigger: "completion"
+
+data_mapping:
+  - from: "personal-details"
+    to: "library-preferences"
+    fields: ["full_name", "email", "postcode"]
+    
+  - from: "library-preferences"
+    to: "terms-conditions"
+    fields: ["full_name", "email", "preferred_library", "communication_preference"]
+    
+  - from: "terms-conditions"
+    to: "application-confirmation"
+    fields: "*"
+
+config:
+  timeout: 1200  # 20 minutes for library card application
+  retry_attempts: 3
+  parallel_execution: false

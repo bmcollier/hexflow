@@ -13,18 +13,23 @@ apps:
     
   - name: "app-three"
     port: 8003
+    
+  - name: "confirmation"
+    port: 8004
 
 # Define the flow between applications
 flow:
   - from: "app-one"
     to: "app-two"
     trigger: "completion"  # When app-one completes, move to app-two
-    # Future: condition: "status == 'success'" for conditional flows
     
   - from: "app-two"  
     to: "app-three"
     trigger: "completion"  # When app-two completes, move to app-three
-    # Future: condition: "data.approval == true" for conditional flows
+    
+  - from: "app-three"
+    to: "confirmation"
+    trigger: "completion"  # When app-three completes, show confirmation
 
 # Optional: Define what data gets passed between apps
 data_mapping:
@@ -35,6 +40,10 @@ data_mapping:
   - from: "app-two"
     to: "app-three"  
     fields: ["processed_data", "session_id"]
+    
+  - from: "app-three"
+    to: "confirmation"
+    fields: "*"  # Pass all workflow data to confirmation
 
 # Runtime configuration
 config:

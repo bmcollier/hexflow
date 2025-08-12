@@ -1,0 +1,1 @@
+"""Terms and conditions acceptance for library card application."""

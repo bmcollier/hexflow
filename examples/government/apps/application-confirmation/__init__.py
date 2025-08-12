@@ -1,0 +1,1 @@
+"""Application confirmation for completed library card application."""

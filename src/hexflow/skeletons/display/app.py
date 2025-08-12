@@ -1,6 +1,6 @@
 """Display application skeleton for read-only confirmation pages."""
 
-from flask import request, render_template_string
+from flask import request, render_template_string, has_request_context
 from ..http_base.app import HTTPBaseApp
 from typing import Dict, List, Any, Optional
 
@@ -12,15 +12,31 @@ class DisplayApp(HTTPBaseApp):
         try:
             super().__init__(name, host, port)
             self.name = name  # Store name for template usage
-            self.display_config = self.setup_display()
+            # Don't call setup_display() here - it may need request context
         except TypeError as e:
             if "unexpected keyword argument" in str(e):
                 raise TypeError(f"DisplayApp constructor requires 'name', 'host', and 'port' parameters. "
                               f"Use: super().__init__(name='app-name', host='localhost', port=8001)") from e
             raise
         
+    def get_workflow_data(self) -> Dict[str, Any]:
+        """Get workflow data passed from previous steps.
+        
+        Returns:
+            Dict containing workflow data if request context is available, empty dict otherwise.
+        """
+        if not has_request_context():
+            return {}
+        
+        # Get all workflow data passed from router  
+        workflow_params = dict(request.form) if request.method == 'POST' else dict(request.args)
+        workflow_params.pop('workflow_token', None)  # Remove token from data
+        return workflow_params
+    
     def setup_display(self) -> Dict[str, Any]:
         """Override this method to define display configuration.
+        
+        You can access workflow data using self.get_workflow_data() in this method.
         
         Returns:
             Dict containing display configuration with title, sections, etc.
@@ -41,7 +57,8 @@ class DisplayApp(HTTPBaseApp):
     
     def render_display(self) -> str:
         """Render the display HTML."""
-        display_config = self.display_config
+        # Call setup_display() during request handling when context is available
+        display_config = self.setup_display()
         workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
         
         # Build sections HTML
@@ -125,25 +142,28 @@ class DisplayApp(HTTPBaseApp):
     def render_workflow_data(self) -> str:
         """Render workflow data from all previous steps.
         
-        This method attempts to fetch and display data from the workflow session.
+        This method shows data passed from the router via form/URL parameters.
         Override this method to customize how workflow data is displayed.
         """
         workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
         if not workflow_token:
-            return '<div class="workflow-data"><div class="empty-data">No workflow data available</div></div>'
+            return '<div class="workflow-data"><div class="empty-data">No workflow token found</div></div>'
         
-        # This would typically fetch data from the state backend
-        # For now, we'll show the parameters passed to this app
+        # Get all workflow data passed from router
         workflow_params = dict(request.form) if request.method == 'POST' else dict(request.args)
         workflow_params.pop('workflow_token', None)  # Remove token from display
         
         if not workflow_params:
-            return '<div class="workflow-data"><div class="empty-data">No workflow data to display</div></div>'
+            return '<div class="workflow-data"><div class="empty-data">No workflow data passed to this step</div></div>'
         
         data_html = []
         for key, value in workflow_params.items():
             if isinstance(value, list) and len(value) == 1:
-                value = value[0]  # Flatten single-item lists from URL params
+                value = value[0]  # Flatten single-item lists from form data
+            
+            # Handle list values (like from checkboxes)
+            if isinstance(value, list):
+                value = ', '.join(str(v) for v in value)
             
             display_key = key.replace('_', ' ').title()
             data_html.append(f'''
@@ -155,7 +175,7 @@ class DisplayApp(HTTPBaseApp):
         
         return f'''
         <div class="workflow-data">
-            <div class="step-title">Submitted Information</div>
+            <div class="step-title">Workflow Data</div>
             {''.join(data_html)}
         </div>
         '''
