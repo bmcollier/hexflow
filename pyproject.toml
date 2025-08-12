@@ -34,7 +34,7 @@ dependencies = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hexflow"]
-include = ["examples/"]
+force-include = { "examples" = "hexflow/examples", "AI.md" = "hexflow/AI.md" }
 
 [project.optional-dependencies]
 dev = [
