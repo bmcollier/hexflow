@@ -1037,3 +1037,55 @@ Key Framework Patterns
     - from: source_app
       to: target_app
       trigger: submit
+
+### Request Context Safety - All Templates
+
+  **CRITICAL**: All template methods may be called during app
+  initialization (outside request context) AND during request handling.
+  Always check for request context before accessing Flask request objects.
+
+  **Affected methods across templates**:
+  - **CasaApp**: `setup_form()`
+  - **DisplayApp**: `setup_display()`
+  - **HTTPBaseApp**: Any method that accesses request data outside of route
+   handlers
+
+  **Safe pattern for all templates**:
+  ```python
+  def setup_form(self):  # or setup_display(), etc.
+      from flask import request, has_request_context
+
+      if has_request_context():
+          # Safe to access request.form, request.args, etc.
+          data = request.form.get('field_name', '') or
+  request.args.get('field_name', '')
+          content = f"Dynamic content with {data}"
+      else:
+          # Fallback for initialization phase
+          content = "Static fallback content"
+
+      return {
+          'title': 'Page Title',
+          'content': content  # or 'description', 'fields', etc.
+      }
+
+  Why this happens: The launcher calls template methods during app
+  discovery and initialization to validate configuration, before any HTTP
+  requests are made.
+
+  Alternative approach: Use HTTPBaseApp with route handlers when you need
+  guaranteed request context:
+  from hexflow.skeletons.http_base.app import HTTPBaseApp
+
+  class MyApp(HTTPBaseApp):
+      def setup_routes(self):
+          @self.app.route('/', methods=['GET', 'POST'])
+          def index():
+              from flask import request  # Always safe inside route 
+  handlers
+              name = request.form.get('name', '') or
+  request.args.get('name', 'Friend')
+              return f"Hello, {name}!"
+
+  Rule: Either use has_request_context() checks in template methods OR use
+  HTTPBaseApp with route handlers for request-dependent logic.
