@@ -32,65 +32,31 @@ mkdir my-workflow
 cd my-workflow
 ```
 
-2. **Define the workflow in a DAG file** (`workflow.dag`):
-```yaml
-name: "simple-workflow"
-description: "A simple two-step workflow"
+2. **Write a specification file** (`my-workflow.spec.md`):
+```markdown
+# My Workflow Specification
 
-apps:
-  - name: "step-one"
-    port: 8001
-    entry_point: true
-    
-  - name: "step-two"
-    port: 8002
+## Overview
+A simple workflow that collects a user's name and displays a greeting.
 
-flow:
-  - from: "step-one"
-    to: "step-two"
-    trigger: "completion"
+## Steps
+1. **Step One**: Collect user's name via form
+2. **Step Two**: Display personalized greeting
+
+## Fields
+- name: User's full name (required)
 ```
 
-3. **Create applications** in subdirectories:
+3. **Optionally add structured specifications**:
+- `my-workflow.spec.yaml`: YAML structure for forms and validation
+- `my-workflow.spec.feature`: Gherkin scenarios for testing
 
-`step-one/app.py`:
-```python
-from hexflow.skeletons.casa.app import CasaApp
-
-class StepOneApp(CasaApp):
-    def setup_form(self):
-        return {
-            'title': 'Step One',
-            'fields': [
-                {
-                    'name': 'name',
-                    'label': 'Your Name',
-                    'type': 'text',
-                    'required': True
-                }
-            ]
-        }
+4. **Instruct AI to generate the workflow**:
+```
+Please read AI.md and generate the complete workflow applications based on my-workflow.spec.md
 ```
 
-`step-two/app.py`:
-```python
-from hexflow.skeletons.http_base.app import HTTPBaseApp
-from flask import request
-
-class StepTwoApp(HTTPBaseApp):
-    def setup_routes(self):
-        @self.app.route('/')
-        def index():
-            name = request.args.get('name', 'Anonymous')
-            return f"<h1>Hello {name}!</h1><p>Workflow completed.</p>"
-```
-
-4. **Add `__init__.py` files**:
-```bash
-touch step-one/__init__.py step-two/__init__.py
-```
-
-5. **Launch the workflow**:
+5. **Launch the generated workflow**:
 ```bash
 hexflow .
 ```
