@@ -1,21 +1,112 @@
 # Hexflow AI Guide
 
-This guide explains for agents how to use the Hexflow framework to create orchestrated workflows from specification files.
+## 🚨 CRITICAL - READ FIRST 🚨
 
-## IMPORTANT
+**YOU MUST SUBCLASS EXISTING TEMPLATES - NEVER CREATE NEW PROGRAMS**
 
-**DAG Files**: YAML workflow definitions that control application flow. *They must have the filename extension ".dag"*
-**Examples**: Use the examples at https://github.com/bmcollier/hexflow/ to understand how to subclass and use this library
+✅ **CORRECT APPROACH**:
+```python
+from hexflow.skeletons.casa.app import CasaApp
+
+class MyFormApp(CasaApp):  # ← SUBCLASS existing template
+    def setup_form(self):
+        return {...}
+```
+
+❌ **WRONG - DO NOT DO THIS**:
+```python
+from flask import Flask  # ← Do NOT create new Flask apps
+app = Flask(__name__)    # ← This is WRONG
+```
+
+**MANDATORY EXAMPLES**: Study examples at https://github.com/bmcollier/hexflow/ before starting
+
+**DAG FILES**: Must have ".dag" extension and define workflow orchestration
+
+---
+
+## 📋 WORKFLOW STEPS - FOLLOW EXACTLY
+
+When given a specification file, you must:
+
+1. **STUDY EXAMPLES FIRST**: Look at examples/government/, examples/fishing/ to understand the patterns
+2. **CREATE DAG FILE**: YAML workflow definition (must end in .dag)  
+3. **SUBCLASS TEMPLATES**: Inherit from CasaApp, DisplayApp, or HTTPBaseApp
+4. **NEVER CREATE NEW PROGRAMS**: Always extend existing hexflow templates
+
+## ⚡ QUICK REFERENCE
+
+**Form Application**:
+```python
+from hexflow.skeletons.casa.app import CasaApp
+class MyApp(CasaApp):
+    def setup_form(self): return {...}
+```
+
+**Display Page**:
+```python  
+from hexflow.skeletons.display.app import DisplayApp
+class MyApp(DisplayApp):
+    def setup_display(self): return {...}
+```
+
+**Custom Application**:
+```python
+from hexflow.skeletons.http_base.app import HTTPBaseApp
+class MyApp(HTTPBaseApp):
+    def setup_routes(self): ...
+```
+
+---
 
 ## Overview
 
 The Hexflow framework enables AI to:
 1. **Parse specification files** describing workflow requirements
-2. **Generate DAG files** that define application flow and orchestration
+2. **Generate DAG files** that define application flow and orchestration  
 3. **Create modular applications** using skeleton templates
 4. **Orchestrate complete workflows** with automatic routing between apps
 
 ## Framework Components
+
+## 🎯 LEARN FROM EXAMPLES - MANDATORY
+
+**Before coding anything, examine these working examples**:
+
+📂 **examples/government/apps/personal-details/app.py**:
+```python
+from skeletons.gds_casa import GDSCasaApp  # Local template
+
+class PersonalDetailsApp(GDSCasaApp):  # ← Subclassing pattern
+    def setup_form(self):
+        return {
+            'title': 'Apply for a library card',
+            'fields': [
+                {
+                    'name': 'full_name',
+                    'label': 'Full name', 
+                    'type': 'text',
+                    'required': True
+                }
+            ]
+        }
+```
+
+📂 **examples/fishing/name-and-address/app.py**:
+```python
+from hexflow.skeletons.casa.app import CasaApp  # Framework template
+
+class NameAndAddressApp(CasaApp):  # ← Subclassing pattern
+    def setup_form(self):
+        return {
+            'title': 'Name and Address',
+            'fields': [...]
+        }
+```
+
+**Pattern Recognition**: Every app inherits from a skeleton and overrides specific methods.
+
+---
 
 ### Core Architecture
 - **Launcher**: Discovers and starts all applications and the router
@@ -23,7 +114,7 @@ The Hexflow framework enables AI to:
 - **Skeletons**: Base templates for creating applications (http_base, casa, display, processor)
 - **DAG Files**: YAML workflow definitions that control application flow. They must have the filename extension ".dag"
 
-### Key Directories
+### Key Directories  
 - `hexflow/skeletons/` - Application templates
 - `examples/` - Example workflows and specifications
 - **Application Structure**: Each application must have its own directory containing:
@@ -81,6 +172,9 @@ config:
 
 ## Application Creation
 
+## ⚠️  WARNING - SUBCLASS ONLY ⚠️
+**Do not create Flask apps from scratch. Always inherit from hexflow templates.**
+
 ### 1. Directory Structure
 Each application requires its own directory:
 ```
@@ -95,13 +189,15 @@ project-name/
 ```
 
 ### 2. Basic HTTP Application
+
+**👀 FOLLOW THIS EXACT PATTERN**:
 ```python
 from hexflow.skeletons.http_base.app import HTTPBaseApp
 
-class AppOne(HTTPBaseApp):
+class AppOne(HTTPBaseApp):  # ← Must inherit from HTTPBaseApp
     """Description of what this app does."""
     
-    def setup_routes(self):
+    def setup_routes(self):  # ← Override this method
         """Setup application routes."""
         @self.app.route('/')
         def index():
@@ -120,13 +216,15 @@ if __name__ == "__main__":
 ```
 
 ### 3. Form-Based Application
+
+**👀 FOLLOW THIS EXACT PATTERN**:
 ```python
 from hexflow.skeletons.casa.app import CasaApp
 
-class DataCollector(CasaApp):
+class DataCollector(CasaApp):  # ← Must inherit from CasaApp
     """Form-based data collection application."""
     
-    def setup_form(self):
+    def setup_form(self):  # ← Override this method
         """Define form fields and validation."""
         return {
             'title': 'Data Collection Form',
