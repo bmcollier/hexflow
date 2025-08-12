@@ -29,7 +29,7 @@ app = Flask(__name__)    # ← This is WRONG
 
 When given a specification file, you must:
 
-1. **STUDY EXAMPLES FIRST**: Look at examples/government/, examples/fishing/ to understand the patterns
+1. **STUDY EXAMPLES FIRST**: Look at examples/fishing/, examples/self-test/ to understand the patterns
 2. **CREATE DAG FILE**: YAML workflow definition (must end in .dag)  
 3. **SUBCLASS TEMPLATES**: Inherit from CasaApp, DisplayApp, or HTTPBaseApp
 4. **NEVER CREATE NEW PROGRAMS**: Always extend existing hexflow templates
@@ -76,25 +76,6 @@ The Hexflow framework enables AI to:
 ## 🎯 LEARN FROM EXAMPLES - MANDATORY
 
 **Before coding anything, examine these working examples**:
-
-📂 **examples/government/apps/personal-details/app.py**:
-```python
-from skeletons.gds_casa import GDSCasaApp  # Local template
-
-class PersonalDetailsApp(GDSCasaApp):  # ← Subclassing pattern
-    def setup_form(self):
-        return {
-            'title': 'Apply for a library card',
-            'fields': [
-                {
-                    'name': 'full_name',
-                    'label': 'Full name', 
-                    'type': 'text',
-                    'required': True
-                }
-            ]
-        }
-```
 
 📂 **examples/fishing/name-and-address/app.py**:
 ```python
@@ -507,69 +488,38 @@ project-directory/
 └── workflow.dag
 ```
 
-#### Example: Government Digital Service (GDS) Skeletons
-The government example demonstrates custom skeletons that inherit from core templates but apply specific styling:
+#### Example: Custom Bootstrap Skeleton
+Create a custom skeleton with Bootstrap styling:
 
 ```python
-# skeletons/gds_casa.py
+# skeletons/bootstrap_casa.py
 from hexflow.skeletons.casa.app import CasaApp
 
-class GDSCasaApp(CasaApp):
-    """Government Digital Service form following GDS Design System."""
+class BootstrapCasaApp(CasaApp):
+    """Bootstrap-styled form skeleton."""
     
-    def __init__(self, name: str = "gds-casa-app", host: str = 'localhost', port: int = 8000):
-        super().__init__(name=name, host=host, port=port)
-        
     def render_form(self, errors=None):
-        """Override to use official GOV.UK Frontend CSS."""
-        # Uses official GOV.UK Frontend CSS from CDN
-        # <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/govuk-frontend@5.4.1/dist/govuk-frontend.min.css">
-        # Authentic Crown logo, GDS colors, proper form components
-        return render_template_string(gds_template, ...)
+        """Override to use Bootstrap CSS styling."""
+        # Custom template with Bootstrap classes
+        # Include Bootstrap CSS from CDN or local files
+        return render_template_string(bootstrap_template, ...)
 ```
 
-**GOV.UK Styling Implementation:**
-Both GDS skeletons (casa and display) use local CSS files from the official GOV.UK Frontend:
-
-```python
-# Load local GOV.UK CSS in skeleton templates
-css_path = os.path.join(os.path.dirname(__file__), 'assets', 'govuk-frontend.min.css')
-with open(css_path, 'r', encoding='utf-8') as f:
-    govuk_css = f.read()
-
-# Include in template
-<style>{{ govuk_css|safe }}</style>
-```
-
-**Local CSS Storage:**
-- **File location**: `examples/government/skeletons/assets/govuk-frontend.min.css`
-- **Source**: Downloaded from official GOV.UK Frontend v5.11.1
-- **Size**: 128KB minified CSS with all components and styling
-
-**CSS-Only Benefits:**
-- **No JavaScript dependencies**: Lighter weight, faster loading
-- **Progressive enhancement**: Works across all browser grades
-- **Authentic styling**: Official GOV.UK colors, typography, and layouts
-- **Accessibility**: WCAG 2.2 AA compliance built into CSS classes
-- **Responsive design**: Mobile-first approach with proper breakpoints
-- **Component consistency**: Standardized form elements, buttons, panels
-- **Government branding**: Official Crown logo and GOV.UK header styling
-
-**Design System Approach:**
-- Uses Block Element Modifier (BEM) naming convention
-- CSS classes for styling content instead of global styles
-- Components designed to be accessible and responsive without JavaScript
-- Maintains consistency with official GOV.UK services
+**Custom Styling Benefits:**
+- **Brand consistency**: Apply organization-specific styling
+- **Design system compliance**: Meet corporate design requirements
+- **Enhanced functionality**: Add specialized validation or integrations
+- **Local assets**: Include CSS, images, fonts in `assets/` directory
 
 **Using Local Skeletons in Applications:**
 ```python
-# personal-details/app.py
-from skeletons.gds_casa import GDSCasaApp
+# my-app/app.py
+from skeletons.bootstrap_casa import BootstrapCasaApp
 
-class PersonalDetailsApp(GDSCasaApp):
+class MyFormApp(BootstrapCasaApp):
     def setup_form(self):
         return {
-            'title': 'Apply for a library card',
+            'title': 'My Custom Form',
             'fields': [...]
         }
 ```
@@ -1028,13 +978,13 @@ When specifications change:
 
 **Run workflow tests** (from within workflow directory):
 ```bash
-cd examples/government
+cd examples/fishing
 python run_tests.py
 ```
 
 **Or run with pytest directly**:
 ```bash
-cd examples/government  
+cd examples/fishing  
 pytest tests/ -v
 ```
 
