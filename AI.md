@@ -1,6 +1,11 @@
 # Hexflow AI Guide
 
-This guide explains how to use the Hexflow framework to create orchestrated workflows from specification files.
+This guide explains for agents how to use the Hexflow framework to create orchestrated workflows from specification files.
+
+## IMPORTANT
+
+**DAG Files**: YAML workflow definitions that control application flow. *They must have the filename extension ".dag"*
+**Examples**: Use the examples at https://github.com/bmcollier/hexflow/ to understand how to subclass and use this library
 
 ## Overview
 
