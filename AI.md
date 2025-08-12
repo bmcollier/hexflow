@@ -54,7 +54,11 @@ class MyApp(DisplayApp):
 ```python
 from hexflow.skeletons.http_base.app import HTTPBaseApp
 class MyApp(HTTPBaseApp):
-    def setup_routes(self): ...
+    def setup_routes(self): 
+        @self.app.route('/', methods=['GET', 'POST'])  # ← MUST include POST
+        def index():
+            from flask import request
+            workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
 ```
 
 ---
@@ -124,6 +128,39 @@ class NameAndAddressApp(CasaApp):  # ← Subclassing pattern
 ## DAG File Format
 
 DAG files are YAML documents that define workflow orchestration:
+
+## DAG File Format Requirements
+
+  When creating DAG files, use this exact YAML structure:
+
+  ```yaml
+  name: "workflow-name"
+  description: "Brief description of the workflow"
+
+  apps:
+    - name: "app-name"
+      port: 8001
+      entry_point: true    # Only on the first app
+
+    - name: "second-app"
+      port: 8002
+
+  flow:
+    - from: "first-app"
+      to: "second-app"
+      trigger: "completion"
+
+  Critical Requirements:
+  - Use apps: not applications:
+  - Set entry_point: true on the first app, not as a separate field
+  - Always include trigger: "completion" in flow steps
+  - Quote all string values
+  - Use consistent indentation (2 spaces)
+
+  Common Mistakes to Avoid:
+  - Using applications: instead of apps:
+  - Setting entry_point: as a top-level field
+  - Omitting trigger: in flow definitions
 
 ```yaml
 # Workflow metadata
@@ -199,13 +236,16 @@ class AppOne(HTTPBaseApp):  # ← Must inherit from HTTPBaseApp
     
     def setup_routes(self):  # ← Override this method
         """Setup application routes."""
-        @self.app.route('/')
+        @self.app.route('/', methods=['GET', 'POST'])
         def index():
-            return '''
+            from flask import request
+            workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
+            return f'''
             <h1>App One</h1>
             <p>Application description and interface</p>
-            <form action="http://localhost:8000/next" method="get">
+            <form action="http://localhost:8000/next" method="post">
                 <input type="hidden" name="from" value="app-one">
+                <input type="hidden" name="workflow_token" value="{workflow_token}">
                 <button type="submit">Next →</button>
             </form>
             ''', 200
@@ -276,11 +316,14 @@ class CustomTemplate(HTTPBaseApp):
     
     def render_custom_interface(self):
         """Custom interface rendering logic."""
-        return '''
+        from flask import request
+        workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
+        return f'''
         <h1>Custom Application</h1>
         <p>This template can do anything you need!</p>
-        <form action="http://localhost:8000/next" method="get">
+        <form action="http://localhost:8000/next" method="post">
             <input type="hidden" name="from" value="custom-app">
+            <input type="hidden" name="workflow_token" value="{workflow_token}">
             <button type="submit">Next →</button>
         </form>
         '''
@@ -289,10 +332,30 @@ class CustomTemplate(HTTPBaseApp):
 ## Workflow Orchestration
 
 ### Flow Control
-The router manages application transitions:
-- **Entry Point**: `http://localhost:8000/start` redirects to first app
-- **Navigation**: Apps redirect to `http://localhost:8000/next?from=app-name`
-- **Completion**: Final app completes the workflow
+The router manages application transitions using POST requests for security:
+- **Entry Point**: `http://localhost:8000/start` POSTs to first app
+- **Navigation**: Apps POST to `http://localhost:8000/next` with form data
+- **Completion**: Final app POSTs to router to complete workflow
+
+### POST Navigation Requirements
+**All apps must accept POST requests and include workflow_token**:
+
+```python
+@self.app.route('/', methods=['GET', 'POST'])
+def index():
+    from flask import request
+    workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
+    # Use workflow_token in forms
+```
+
+**Navigation forms must use POST and include workflow_token**:
+```html
+<form action="http://localhost:8000/next" method="post">
+    <input type="hidden" name="from" value="app-name">
+    <input type="hidden" name="workflow_token" value="{workflow_token}">
+    <button type="submit">Next →</button>
+</form>
+```
 
 ### Session Management
 The router maintains workflow state:
@@ -593,17 +656,18 @@ return f'''
 
 ### Data Access in Applications
 
-**Key Pattern**: Applications access workflow data via `request.args`, not direct database calls
+**Key Pattern**: Applications access workflow data via `request.form` (POST) with `request.args` fallback, not direct database calls
 
 **Correct**:
 ```python
 from flask import request
 
-@self.app.route('/')
+@self.app.route('/', methods=['GET', 'POST'])
 def index():
-    # Get data passed from previous applications
-    full_name = request.args.get('full_name', '')
-    license_type = request.args.get('license_type', '')
+    # Get data passed from previous applications (prioritize POST)
+    full_name = request.form.get('full_name', '') or request.args.get('full_name', '')
+    license_type = request.form.get('license_type', '') or request.args.get('license_type', '')
+    workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
     
     # Use data in response
     return f"Welcome {full_name}, license: {license_type}"
@@ -660,6 +724,22 @@ data_mapping:
 **Applications need Flask request**:
 ```python
 from flask import request  # Required for accessing workflow data
+```
+
+### Route Requirements
+
+**All application routes MUST accept POST requests**:
+```python
+@self.app.route('/', methods=['GET', 'POST'])  # ← REQUIRED: include POST
+def index():
+    workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
+```
+
+**❌ WRONG - Will cause "Method Not Allowed" errors**:
+```python
+@self.app.route('/')  # ← Missing methods=['GET', 'POST']
+def index():
+    pass
 ```
 
 **Random data generation**:

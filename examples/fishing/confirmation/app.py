@@ -7,10 +7,10 @@ class ConfirmationApp(HTTPBaseApp):
     
     def setup_routes(self):
         """Setup routes for the confirmation page."""
-        @self.app.route('/')
+        @self.app.route('/', methods=['GET', 'POST'])
         def index():
-            # Get all workflow data passed from router via URL parameters
-            workflow_data = dict(request.args)
+            # Get all workflow data passed from router (prioritize POST)
+            workflow_data = dict(request.form) if request.method == 'POST' else dict(request.args)
             workflow_token = workflow_data.pop('workflow_token', '')
             
             # Extract data with defaults

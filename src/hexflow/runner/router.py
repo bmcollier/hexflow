@@ -82,9 +82,21 @@ class Router:
             
             print(f"Started workflow: {workflow_session.workflow_token}")
             
-            # Redirect to the entry point app with workflow token
-            params = {'workflow_token': workflow_session.workflow_token}
-            return redirect(f'http://localhost:{entry_app.port}?{urlencode(params)}')
+            # POST to the entry point app with workflow token
+            return f'''
+            <html>
+                <head><title>Starting Workflow</title></head>
+                <body>
+                    <p>Starting workflow...</p>
+                    <form id="startForm" method="post" action="http://localhost:{entry_app.port}">
+                        <input type="hidden" name="workflow_token" value="{workflow_session.workflow_token}">
+                    </form>
+                    <script>
+                        document.getElementById('startForm').submit();
+                    </script>
+                </body>
+            </html>
+            '''
         
         @self.app.route('/next', methods=['GET', 'POST'])
         def next_app():
@@ -130,11 +142,33 @@ class Router:
             # Prepare data to pass to next app based on data_mapping
             next_app_data = self._get_data_for_app(workflow_session, current_app_name, next_app_name)
             
-            # Redirect to the next app with workflow token and data
-            params = {'workflow_token': workflow_token}
-            params.update(next_app_data)
+            # Create form fields for all data
+            form_fields = []
+            form_fields.append(f'<input type="hidden" name="workflow_token" value="{workflow_token}">')
             
-            return redirect(f'http://localhost:{next_port}?{urlencode(params)}')
+            for key, value in next_app_data.items():
+                # Handle list values (like from checkboxes)
+                if isinstance(value, list):
+                    for item in value:
+                        form_fields.append(f'<input type="hidden" name="{key}" value="{item}">')
+                else:
+                    form_fields.append(f'<input type="hidden" name="{key}" value="{value}">')
+            
+            # POST to the next app with workflow token and data
+            return f'''
+            <html>
+                <head><title>Continuing Workflow</title></head>
+                <body>
+                    <p>Continuing to next step...</p>
+                    <form id="nextForm" method="post" action="http://localhost:{next_port}">
+                        {''.join(form_fields)}
+                    </form>
+                    <script>
+                        document.getElementById('nextForm').submit();
+                    </script>
+                </body>
+            </html>
+            '''
         
         @self.app.route('/dag')
         def get_dag():

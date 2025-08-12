@@ -35,14 +35,14 @@ class DisplayApp(HTTPBaseApp):
     def setup_routes(self):
         """Setup display routes with GET handling only."""
         
-        @self.app.route('/', methods=['GET'])
+        @self.app.route('/', methods=['GET', 'POST'])
         def display_handler():
             return self.render_display()
     
     def render_display(self) -> str:
         """Render the display HTML."""
         display_config = self.display_config
-        workflow_token = request.args.get('workflow_token', '')
+        workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
         
         # Build sections HTML
         sections_html = []
@@ -128,13 +128,13 @@ class DisplayApp(HTTPBaseApp):
         This method attempts to fetch and display data from the workflow session.
         Override this method to customize how workflow data is displayed.
         """
-        workflow_token = request.args.get('workflow_token', '')
+        workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
         if not workflow_token:
             return '<div class="workflow-data"><div class="empty-data">No workflow data available</div></div>'
         
         # This would typically fetch data from the state backend
         # For now, we'll show the parameters passed to this app
-        workflow_params = dict(request.args)
+        workflow_params = dict(request.form) if request.method == 'POST' else dict(request.args)
         workflow_params.pop('workflow_token', None)  # Remove token from display
         
         if not workflow_params:

@@ -14,7 +14,7 @@ class HTTPBaseApp:
     
     def setup_routes(self):
         """Setup default routes. Override in subclasses to add more routes."""
-        @self.app.route('/')
+        @self.app.route('/', methods=['GET', 'POST'])
         def index():
             return 'Modular-Builder: Running', 200
     

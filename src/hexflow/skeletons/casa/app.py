@@ -85,7 +85,7 @@ class CasaApp(HTTPBaseApp):
         </html>
         '''
         
-        workflow_token = request.args.get('workflow_token', '')
+        workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
         
         return render_template_string(template, 
                                     title=form_config.get('title', 'Form'),
@@ -101,7 +101,7 @@ class CasaApp(HTTPBaseApp):
         field_label = field.get('label', field_name.replace('_', ' ').title())
         field_required = field.get('required', False)
         field_options = field.get('options', [])
-        field_value = request.form.get(field_name, '') if request.method == 'POST' else ''
+        field_value = request.form.get(field_name, '') or request.args.get(field_name, '')
         
         required_attr = 'required' if field_required else ''
         error_html = f'<div class="error">{error}</div>' if error else ''
@@ -216,14 +216,19 @@ class CasaApp(HTTPBaseApp):
         Returns:
             HTML response for successful submission
         """
+        workflow_token = form_data.get('workflow_token', '')
         return f'''
         <h1>Form Submitted Successfully</h1>
         <p>Thank you for your submission!</p>
         <p><strong>Data received:</strong></p>
         <ul>
-        {''.join([f"<li><strong>{key}:</strong> {value}</li>" for key, value in form_data.items()])}
+        {''.join([f"<li><strong>{key}:</strong> {value}</li>" for key, value in form_data.items() if key not in ['workflow_token', 'from', 'action']])}
         </ul>
-        <p><a href="http://localhost:8000/next?from={self.name}">Continue →</a></p>
+        <form action="http://localhost:8000/next" method="post">
+            <input type="hidden" name="from" value="{self.name}">
+            <input type="hidden" name="workflow_token" value="{workflow_token}">
+            <button type="submit">Continue →</button>
+        </form>
         '''
 
 
