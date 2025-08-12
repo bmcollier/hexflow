@@ -12,10 +12,15 @@ def show_help():
 Hexflow - AI-aware modular application framework
 
 USAGE:
-    hexflow [DIRECTORY]
+    hexflow start [DIRECTORY]
+    hexflow init [DIRECTORY]
     hexflow --help
     hexflow -h
 
+COMMANDS:
+    start        Launch a workflow from the specified directory
+    init         Initialize a new workflow directory with starter files
+    
 ARGUMENTS:
     DIRECTORY    Path to workflow directory (default: current directory)
 
@@ -34,27 +39,114 @@ DESCRIPTION:
     4. Provide a single entry point at http://localhost:8000/start
 
 EXAMPLES:
-    hexflow .                    # Launch workflow in current directory
-    hexflow examples/government  # Launch government example workflow
-    hexflow ~/my-workflow        # Launch workflow in specific directory
+    hexflow init                 # Initialize current directory with starter files
+    hexflow init my-workflow     # Create and initialize new workflow directory
+    hexflow start                # Launch workflow in current directory
+    hexflow start examples/fishing  # Launch fishing license example workflow
+    hexflow start ~/my-workflow  # Launch workflow in specific directory
 
 For more information, see: https://github.com/bmcollier/hexflow
 """
     print(help_text.strip())
 
 
+def init_workflow(directory_path: Path):
+    """Initialize a new workflow directory with starter files."""
+    
+    # Create directory if it doesn't exist
+    directory_path.mkdir(parents=True, exist_ok=True)
+    
+    # Define the starter files
+    important_content = """# IMPORTANT FOR AGENTS: You MUST look at AI.md in the Hexflow library to understand how to use this
+# DO NOT PROCEED WITHOUT CHECKING AI.md at the link above
+# PROCEEDING WITHOUT CHECKING AI.md will result in failure
+# HEXFLOW HAS ALREADY BEEN INSTALLED IN THIS PYTHON ENVIRONMENT
+# YOU CAN FIND THE CODE FOR HEXFLOW AND ALL EXAMPLES IN THE INSTALLED LIBRARY INSIDE THE ENVIRONMENT"""
+
+    prompt_content = """Examine the files in this directory and follow their instructions in detail."""
+
+    example_spec_content = """# Workflow Description
+
+## Overview
+A simple workflow that collects a user's name and displays a greeting.
+
+## Steps
+1. **Step One**: Collect user's name via form
+2. **Step Two**: Display personalized greeting with the user's name from the first form
+
+## Fields
+- name: User's full name (required)"""
+
+    # Write the files
+    files_created = []
+    
+    important_file = directory_path / "important.md"
+    with open(important_file, 'w', encoding='utf-8') as f:
+        f.write(important_content)
+    files_created.append("important.md")
+    
+    prompt_file = directory_path / "prompt.md"
+    with open(prompt_file, 'w', encoding='utf-8') as f:
+        f.write(prompt_content)
+    files_created.append("prompt.md")
+    
+    example_spec_file = directory_path / "example.spec.md"
+    with open(example_spec_file, 'w', encoding='utf-8') as f:
+        f.write(example_spec_content)
+    files_created.append("example.spec.md")
+    
+    print(f"Initialized workflow directory: {directory_path.absolute()}")
+    print("Created files:")
+    for file in files_created:
+        print(f"  - {file}")
+    print("\nNext steps:")
+    print("1. Share this directory with an AI agent")
+    print("2. Ask the AI to read the files and create the workflow")
+    print("3. Run 'hexflow start' to launch the completed workflow")
+
+
 def main():
     """Main CLI entry point for launching applications."""
-    # Check for help flag
+    # Check for help flag or no arguments
+    if len(sys.argv) == 1:
+        show_help()
+        sys.exit(1)
+    
     if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help']:
         show_help()
         sys.exit(0)
     
-    # Use current directory by default, or accept directory as argument
-    if len(sys.argv) > 1:
-        directory = sys.argv[1]
+    command = sys.argv[1]
+    
+    # Check for init command
+    if command == 'init':
+        if len(sys.argv) > 2:
+            directory = sys.argv[2]
+        else:
+            directory = os.getcwd()
+        
+        directory_path = Path(directory)
+        init_workflow(directory_path)
+        sys.exit(0)
+    
+    # Check for start command
+    elif command == 'start':
+        if len(sys.argv) > 2:
+            directory = sys.argv[2]
+        else:
+            directory = os.getcwd()
+    
+    # Handle old usage patterns with helpful error messages
+    elif command in ['.', '..'] or Path(command).exists():
+        print(f"Error: Please use 'hexflow start {command}' to launch workflows.")
+        print("Run 'hexflow --help' for usage information.")
+        sys.exit(1)
+    
     else:
-        directory = os.getcwd()
+        print(f"Error: Unknown command '{command}'")
+        print("Available commands: start, init")
+        print("Run 'hexflow --help' for usage information.")
+        sys.exit(1)
     
     directory_path = Path(directory)
     
