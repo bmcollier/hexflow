@@ -33,14 +33,17 @@ class DisplayApp(HTTPBaseApp):
         workflow_params.pop('workflow_token', None)  # Remove token from data
         return workflow_params
     
-    def setup_display(self) -> Dict[str, Any]:
+    def setup_display(self, workflow_data: Dict[str, Any] = None) -> Dict[str, Any]:
         """Override this method to define display configuration.
         
-        You can access workflow data using self.get_workflow_data() in this method.
+        Args:
+            workflow_data: Dictionary containing data passed from previous workflow steps
         
         Returns:
             Dict containing display configuration with title, sections, etc.
         """
+        workflow_data = workflow_data or {}
+        
         return {
             'title': 'Confirmation',
             'sections': [],
@@ -49,69 +52,68 @@ class DisplayApp(HTTPBaseApp):
         }
     
     def setup_routes(self):
-        """Setup display routes with GET handling only."""
+        """Setup display routes - override this method in subclasses for custom behavior."""
         
         @self.app.route('/', methods=['GET', 'POST'])
         def display_handler():
-            return self.render_display()
-    
-    def render_display(self) -> str:
-        """Render the display HTML."""
-        # Call setup_display() during request handling when context is available
-        display_config = self.setup_display()
-        workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
-        
-        # Build sections HTML
-        sections_html = []
-        for section in display_config.get('sections', []):
-            section_html = self.render_section(section)
-            sections_html.append(section_html)
-        
-        # Get workflow data if requested
-        workflow_data_html = ''
-        if display_config.get('show_workflow_data', False) and workflow_token:
-            workflow_data_html = self.render_workflow_data()
-        
-        template = '''
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>{{ title }}</title>
-            <style>
-                body { font-family: Arial, sans-serif; max-width: 700px; margin: 50px auto; padding: 20px; }
-                .header { text-align: center; margin-bottom: 30px; }
-                .section { background: #f8f9fa; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #007cba; }
-                .section h3 { margin-top: 0; color: #007cba; }
-                .data-item { margin-bottom: 10px; }
-                .data-label { font-weight: bold; color: #333; }
-                .data-value { color: #666; margin-left: 10px; }
-                .completion-message { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; text-align: center; margin-top: 30px; border: 1px solid #c3e6cb; }
-                .workflow-data { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-                .workflow-step { margin-bottom: 15px; }
-                .step-title { font-weight: bold; color: #007cba; margin-bottom: 8px; }
-                .empty-data { color: #999; font-style: italic; }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>{{ title }}</h1>
-            </div>
+            # Get workflow data directly in route handler (like HTTPBaseApp pattern)
+            workflow_data = dict(request.form) if request.method == 'POST' else dict(request.args)
+            workflow_token = workflow_data.pop('workflow_token', '')
             
-            {{ sections_html|safe }}
-            {{ workflow_data_html|safe }}
+            # Call setup_display with direct access to workflow data
+            display_config = self.setup_display(workflow_data)
             
-            <div class="completion-message">
-                {{ completion_message }}
-            </div>
-        </body>
-        </html>
-        '''
-        
-        return render_template_string(template,
-                                    title=display_config.get('title', 'Confirmation'),
-                                    sections_html=''.join(sections_html),
-                                    workflow_data_html=workflow_data_html,
-                                    completion_message=display_config.get('completion_message', 'Thank you!'))
+            # Build sections HTML
+            sections_html = []
+            for section in display_config.get('sections', []):
+                section_html = self.render_section(section)
+                sections_html.append(section_html)
+            
+            # Get workflow data if requested
+            workflow_data_html = ''
+            if display_config.get('show_workflow_data', False):
+                workflow_data_html = self.render_workflow_data(workflow_data)
+            
+            template = '''
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>{{ title }}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; max-width: 700px; margin: 50px auto; padding: 20px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .section { background: #f8f9fa; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #007cba; }
+                    .section h3 { margin-top: 0; color: #007cba; }
+                    .data-item { margin-bottom: 10px; }
+                    .data-label { font-weight: bold; color: #333; }
+                    .data-value { color: #666; margin-left: 10px; }
+                    .completion-message { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; text-align: center; margin-top: 30px; border: 1px solid #c3e6cb; }
+                    .workflow-data { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+                    .workflow-step { margin-bottom: 15px; }
+                    .step-title { font-weight: bold; color: #007cba; margin-bottom: 8px; }
+                    .empty-data { color: #999; font-style: italic; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>{{ title }}</h1>
+                </div>
+                
+                {{ sections_html|safe }}
+                {{ workflow_data_html|safe }}
+                
+                <div class="completion-message">
+                    {{ completion_message }}
+                </div>
+            </body>
+            </html>
+            '''
+            
+            return render_template_string(template,
+                                        title=display_config.get('title', 'Confirmation'),
+                                        sections_html=''.join(sections_html),
+                                        workflow_data_html=workflow_data_html,
+                                        completion_message=display_config.get('completion_message', 'Thank you!'))
     
     def render_section(self, section: Dict[str, Any]) -> str:
         """Render a display section."""
@@ -139,25 +141,20 @@ class DisplayApp(HTTPBaseApp):
         </div>
         '''
     
-    def render_workflow_data(self) -> str:
+    def render_workflow_data(self, workflow_data: Dict[str, Any]) -> str:
         """Render workflow data from all previous steps.
         
-        This method shows data passed from the router via form/URL parameters.
-        Override this method to customize how workflow data is displayed.
+        Args:
+            workflow_data: Dictionary containing data passed from previous workflow steps
+        
+        Returns:
+            HTML string displaying the workflow data
         """
-        workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
-        if not workflow_token:
-            return '<div class="workflow-data"><div class="empty-data">No workflow token found</div></div>'
-        
-        # Get all workflow data passed from router
-        workflow_params = dict(request.form) if request.method == 'POST' else dict(request.args)
-        workflow_params.pop('workflow_token', None)  # Remove token from display
-        
-        if not workflow_params:
-            return '<div class="workflow-data"><div class="empty-data">No workflow data passed to this step</div></div>'
+        if not workflow_data:
+            return '<div class="workflow-data"><div class="empty-data">No workflow data available</div></div>'
         
         data_html = []
-        for key, value in workflow_params.items():
+        for key, value in workflow_data.items():
             if isinstance(value, list) and len(value) == 1:
                 value = value[0]  # Flatten single-item lists from form data
             

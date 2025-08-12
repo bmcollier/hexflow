@@ -12,9 +12,9 @@ from hexflow.skeletons.display.app import DisplayApp
 class ConfirmationApp(DisplayApp):
     """Display confirmation page with workflow data."""
     
-    def setup_display(self):
+    def setup_display(self, workflow_data=None):
         """Setup display using workflow data."""
-        workflow_data = self.get_workflow_data()
+        workflow_data = workflow_data or {}
         
         # Create dynamic content based on workflow data
         sections = []
