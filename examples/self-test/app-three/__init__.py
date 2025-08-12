@@ -1,0 +1,1 @@
+"""App Three - Simple test application."""

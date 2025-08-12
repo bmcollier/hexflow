@@ -1,0 +1,58 @@
+name: "employee-onboarding"
+description: "Four-step employee onboarding workflow with personal info, job details, IT setup, and HR documentation"
+
+apps:
+  - name: "personal-info"
+    port: 8001
+    entry_point: true
+    
+  - name: "job-details"
+    port: 8002
+    
+  - name: "it-setup"
+    port: 8003
+    
+  - name: "hr-documentation"
+    port: 8004
+    
+  - name: "welcome-confirmation"
+    port: 8005
+
+flow:
+  - from: "personal-info"
+    to: "job-details"
+    trigger: "completion"
+    
+  - from: "job-details"
+    to: "it-setup"
+    trigger: "completion"
+    
+  - from: "it-setup"
+    to: "hr-documentation"
+    trigger: "completion"
+    
+  - from: "hr-documentation"
+    to: "welcome-confirmation"
+    trigger: "completion"
+
+data_mapping:
+  - from: "personal-info"
+    to: "job-details"
+    fields: ["full_name", "email", "phone"]
+    
+  - from: "job-details"
+    to: "it-setup"
+    fields: ["full_name", "email", "department", "job_title", "start_date"]
+    
+  - from: "it-setup"
+    to: "hr-documentation"
+    fields: ["full_name", "email", "department", "job_title", "laptop_type", "software_access"]
+    
+  - from: "hr-documentation"
+    to: "welcome-confirmation"
+    fields: "*"
+
+config:
+  timeout: 2400  # 40 minutes for onboarding
+  retry_attempts: 3
+  parallel_execution: false

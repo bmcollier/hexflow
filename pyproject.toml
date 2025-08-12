@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "modular-builder"
+dynamic = ["version"]
+description = "AI-driven workflow creation framework"
+readme = "tests/README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Ben Collier", email = "bmcollier@gmail.com"},
+]
+dependencies = [
+    "flask>=2.0.0",
+    "pyyaml>=6.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["modularbuilder"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.0.290",
+]
+
+[project.scripts]
+modular-launcher = "modularbuilder.launcher.cli:main"
+
+[tool.hatch.version]
+path = "modularbuilder/__init__.py"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+select = ["E", "F", "I", "N", "W", "UP"]

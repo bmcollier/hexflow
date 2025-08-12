@@ -1,0 +1,43 @@
+# Simple linear workflow: app-one → app-two → app-three
+name: "test-flow"
+description: "Simple test workflow with three sequential applications"
+
+# Define the applications in this workflow
+apps:
+  - name: "app-one"
+    port: 8001
+    entry_point: true  # This is where the workflow starts
+  
+  - name: "app-two" 
+    port: 8002
+    
+  - name: "app-three"
+    port: 8003
+
+# Define the flow between applications
+flow:
+  - from: "app-one"
+    to: "app-two"
+    trigger: "completion"  # When app-one completes, move to app-two
+    # Future: condition: "status == 'success'" for conditional flows
+    
+  - from: "app-two"  
+    to: "app-three"
+    trigger: "completion"  # When app-two completes, move to app-three
+    # Future: condition: "data.approval == true" for conditional flows
+
+# Optional: Define what data gets passed between apps
+data_mapping:
+  - from: "app-one"
+    to: "app-two"
+    fields: ["user_input", "session_id"]
+    
+  - from: "app-two"
+    to: "app-three"  
+    fields: ["processed_data", "session_id"]
+
+# Runtime configuration
+config:
+  timeout: 300  # 5 minutes total timeout
+  retry_attempts: 3
+  parallel_execution: false  # Sequential execution for this flow

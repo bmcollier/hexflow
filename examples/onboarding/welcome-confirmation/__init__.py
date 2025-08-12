@@ -1,0 +1,1 @@
+"""Welcome confirmation for completed employee onboarding."""

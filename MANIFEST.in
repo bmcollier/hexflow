@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include AI.md
+recursive-include examples *.py *.dag *.spec.* *.md
+recursive-include examples *.yaml *.feature
+recursive-exclude examples *_sessions.db
+recursive-exclude examples __pycache__ *.pyc
+recursive-exclude examples .pytest_cache
+recursive-exclude examples test-report.html
+recursive-exclude examples playwright-report
+global-exclude examples/government/*

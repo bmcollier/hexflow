@@ -1,0 +1,47 @@
+name: "fishing-license"
+description: "Fishing license application workflow with three forms and confirmation"
+
+apps:
+  - name: "name-and-address"
+    port: 8001
+    entry_point: true
+    
+  - name: "license-type"
+    port: 8002
+    
+  - name: "payment"
+    port: 8003
+    
+  - name: "confirmation"
+    port: 8004
+
+flow:
+  - from: "name-and-address"
+    to: "license-type"
+    trigger: "completion"
+    
+  - from: "license-type"
+    to: "payment"
+    trigger: "completion"
+    
+  - from: "payment"
+    to: "confirmation"
+    trigger: "completion"
+
+data_mapping:
+  - from: "name-and-address"
+    to: "license-type"
+    fields: ["full_name", "address", "postcode"]
+    
+  - from: "license-type"
+    to: "payment"
+    fields: ["full_name", "address", "postcode", "license_type", "license_price"]
+    
+  - from: "payment"
+    to: "confirmation"
+    fields: "*"
+
+config:
+  timeout: 600
+  retry_attempts: 3
+  parallel_execution: false
