@@ -3,10 +3,10 @@
 import sys
 import os
 
-# Add the modularbuilder package to the path
+# Add the hexflow package to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from modularbuilder.skeletons.http_base.app import HTTPBaseApp
+from hexflow.skeletons.http_base.app import HTTPBaseApp
 
 
 class AppThree(HTTPBaseApp):

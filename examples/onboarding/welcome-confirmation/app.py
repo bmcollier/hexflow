@@ -5,10 +5,10 @@ import sys
 import os
 from flask import request
 
-# Add the parent directory to the path so we can import modularbuilder
+# Add the parent directory to the path so we can import hexflow
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from modularbuilder.skeletons.display import DisplayApp
+from hexflow.skeletons.display import DisplayApp
 
 
 class WelcomeConfirmationApp(DisplayApp):

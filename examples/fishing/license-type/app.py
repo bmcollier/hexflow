@@ -1,4 +1,4 @@
-from modularbuilder.skeletons.casa.app import CasaApp
+from hexflow.skeletons.casa.app import CasaApp
 
 class LicenseTypeApp(CasaApp):
     """Allow users to select their fishing license type and duration."""

@@ -1,4 +1,4 @@
-from modularbuilder.skeletons.http_base.app import HTTPBaseApp
+from hexflow.skeletons.http_base.app import HTTPBaseApp
 from flask import request
 import random
 

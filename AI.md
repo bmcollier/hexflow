@@ -1,10 +1,10 @@
-# Modular Builder AI Guide
+# Hexflow AI Guide
 
-This guide explains how to use the Modular Builder framework to create orchestrated workflows from specification files.
+This guide explains how to use the Hexflow framework to create orchestrated workflows from specification files.
 
 ## Overview
 
-The Modular Builder framework enables AI to:
+The Hexflow framework enables AI to:
 1. **Parse specification files** describing workflow requirements
 2. **Generate DAG files** that define application flow and orchestration
 3. **Create modular applications** using skeleton templates
@@ -19,7 +19,7 @@ The Modular Builder framework enables AI to:
 - **DAG Files**: YAML workflow definitions that control application flow
 
 ### Key Directories
-- `modularbuilder/skeletons/` - Application templates
+- `hexflow/skeletons/` - Application templates
 - `examples/` - Example workflows and specifications
 - **Application Structure**: Each application must have its own directory containing:
   - `__init__.py` - Package initialization file
@@ -91,7 +91,7 @@ project-name/
 
 ### 2. Basic HTTP Application
 ```python
-from modularbuilder.skeletons.http_base.app import HTTPBaseApp
+from hexflow.skeletons.http_base.app import HTTPBaseApp
 
 class AppOne(HTTPBaseApp):
     """Description of what this app does."""
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
 ### 3. Form-Based Application
 ```python
-from modularbuilder.skeletons.casa.app import CasaApp
+from hexflow.skeletons.casa.app import CasaApp
 
 class DataCollector(CasaApp):
     """Form-based data collection application."""
@@ -156,7 +156,7 @@ class DataCollector(CasaApp):
 
 ### 4. Custom Application Templates
 ```python
-from modularbuilder.skeletons.http_base.app import HTTPBaseApp
+from hexflow.skeletons.http_base.app import HTTPBaseApp
 
 class CustomTemplate(HTTPBaseApp):
     """Completely custom application template."""
@@ -346,7 +346,7 @@ The government example demonstrates custom skeletons that inherit from core temp
 
 ```python
 # skeletons/gds_casa.py
-from modularbuilder.skeletons.casa.app import CasaApp
+from hexflow.skeletons.casa.app import CasaApp
 
 class GDSCasaApp(CasaApp):
     """Government Digital Service form following GDS Design System."""
@@ -770,7 +770,7 @@ def workflow_runner():
     import sys
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     
-    from modularbuilder.launcher.app_launcher import AppLauncher
+    from hexflow.launcher.app_launcher import AppLauncher
     
     # Workflow path is the parent directory of tests/
     workflow_path = Path(__file__).parent.parent

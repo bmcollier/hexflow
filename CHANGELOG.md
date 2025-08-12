@@ -8,10 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-01-12
 
 ### Added
-- Initial release of Hexflow (formerly Modular Builder)
+- Initial release of Hexflow
 - Core framework architecture with launcher, router, and state management
 - Skeleton system for rapid application development:
-  - HTTPBaseApp for custom web applications
+  - HTTPBaseApp for all http-based services
   - CasaApp for form-based data collection
   - DisplayApp for read-only confirmation pages
 - DAG-based workflow orchestration
@@ -24,9 +24,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Employee onboarding: Multi-step HR process
 - AI.md guide for AI-driven workflow generation
 - Comprehensive documentation and examples
-
-### Infrastructure
-- PyPI package configuration
-- GitHub repository setup
-- AGPL v3.0 licensing
-- Python 3.11+ support

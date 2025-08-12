@@ -1,4 +1,4 @@
-from modularbuilder.skeletons.casa.app import CasaApp
+from hexflow.skeletons.casa.app import CasaApp
 
 class PaymentApp(CasaApp):
     """Dummy payment processing for fishing license application."""

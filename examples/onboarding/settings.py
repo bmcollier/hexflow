@@ -1,7 +1,7 @@
 """Configuration settings for the employee onboarding workflow."""
 
 import os
-from modularbuilder.state import SQLiteBackend
+from hexflow.state import SQLiteBackend
 
 # State backend configuration
 STATE_BACKEND_CLASS = SQLiteBackend

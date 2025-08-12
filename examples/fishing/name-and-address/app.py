@@ -1,4 +1,4 @@
-from modularbuilder.skeletons.casa.app import CasaApp
+from hexflow.skeletons.casa.app import CasaApp
 
 class NameAndAddressApp(CasaApp):
     """Collect name and address information for British fishing license applicants."""
