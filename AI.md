@@ -1089,3 +1089,87 @@ Key Framework Patterns
 
   Rule: Either use has_request_context() checks in template methods OR use
   HTTPBaseApp with route handlers for request-dependent logic.
+
+  Method Signature Requirements - Critical 
+  Framework APIs
+
+  DisplayApp Template - setup_display() Method
+
+  ❌ WRONG - Missing workflow_data parameter:
+  def setup_display(self):  # Missing required 
+  parameter
+      # This will cause: "takes 1 positional 
+  argument but 2 were given"
+
+  ✅ CORRECT - Accept workflow_data parameter:
+  def setup_display(self, workflow_data):
+      name = workflow_data.get('name',
+  'Default')
+      # Use workflow_data, not 
+  request.form/request.args
+
+  Why: The DisplayApp skeleton automatically
+  calls setup_display(workflow_data) where
+  workflow_data contains all form data from
+  previous workflow steps.
+
+  Data Access Anti-Patterns in Templates
+
+  ❌ WRONG - Manual request handling in 
+  DisplayApp:
+  def setup_display(self, workflow_data):
+      from flask import request
+      name = request.form.get('name', '')  # 
+  Don't do this!
+
+  ✅ CORRECT - Use provided workflow_data:
+  def setup_display(self, workflow_data):
+      name = workflow_data.get('name',
+  'Friend')  # Framework provides this
+
+  Why: DisplayApp receives data via
+  workflow_data parameter, not Flask request
+  objects. The framework handles data
+  collection and passing automatically.
+
+  Template Method Signature Checklist
+
+  Before implementing template methods, verify
+  the correct signature:
+
+  - CasaApp: setup_form(self) - No additional
+  parameters
+  - DisplayApp: setup_display(self, 
+  workflow_data) - Requires workflow_data
+  parameter
+  - HTTPBaseApp: setup_routes(self) - No
+  additional parameters
+
+  Common Error Pattern: Copying method
+  signatures between different skeleton types
+  without checking the specific requirements
+  for each template.
+
+  Framework Data Flow - Don't Bypass It
+
+  Architecture Rule: Templates receive data
+  through framework-provided parameters, not
+  direct Flask request access.
+
+  DisplayApp Data Flow:
+  1. Previous apps submit data to router via
+  forms
+  2. Router collects and stores workflow data
+  3. Router passes collected data as
+  workflow_data parameter
+  4. DisplayApp uses workflow_data, never
+  request.form
+
+  Debugging Tip: If you get "takes X arguments
+  but Y were given" errors, check the method
+  signature against the framework's expected
+  API, not other template types.
+
+  This would help prevent the signature
+  mismatch and incorrect data access patterns
+  that caused the original error.
