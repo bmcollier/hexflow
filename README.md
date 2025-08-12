@@ -35,6 +35,7 @@ cd my-workflow
 2. **Write a specification file** (`my-workflow.spec.md`):
 ```markdown
 # My Workflow Specification
+# See https://github.com/bmcollier/hexflow/blob/main/AI.md to understand how to use this
 
 ## Overview
 A simple workflow that collects a user's name and displays a greeting.

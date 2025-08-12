@@ -16,7 +16,7 @@ The Hexflow framework enables AI to:
 - **Launcher**: Discovers and starts all applications and the router
 - **Router**: Orchestrates workflow navigation based on DAG definitions  
 - **Skeletons**: Base templates for creating applications (http_base, casa, display, processor)
-- **DAG Files**: YAML workflow definitions that control application flow
+- **DAG Files**: YAML workflow definitions that control application flow. They must have the filename extension ".dag"
 
 ### Key Directories
 - `hexflow/skeletons/` - Application templates
