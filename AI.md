@@ -1044,3 +1044,46 @@ pytest tests/ --html=test-report.html
 ```
 
 This pattern ensures that every workflow specification automatically gets comprehensive test coverage, maintaining quality and catching regressions as workflows evolve.
+
+Key Framework Patterns
+
+  Constructor Parameters: All app classes must accept name,
+  host, port parameters in their __init__ method, even if
+  using defaults:
+  def __init__(self, name="app_name", host='localhost', 
+  port=8001):
+      super().__init__(name, host, port)
+
+  DAG Data Mapping Format: The data_mapping section uses
+  this specific structure:
+  data_mapping:
+    - from: source_app_name
+      to: target_app_name
+      fields: ["field1", "field2"]  # Array of field names 
+  to pass
+
+  App Discovery: The launcher expects:
+  - App directories with app.py files
+  - App classes that inherit from HTTPBaseApp, CasaApp, or
+  DisplayApp
+  - Class names should be descriptive (not just "App")
+
+  Form Data Flow:
+  - Form data is automatically saved to workflow session by
+  the router
+  - Data mapping in DAG controls which fields pass between
+  apps
+  - Target apps receive data as form parameters (accessible
+  via request.form.get())
+
+  Required DAG Structure:
+  name: workflow_name
+  description: Description
+  apps:
+    - name: app_name
+      port: 8001
+      entry_point: true  # Only one app should have this
+  flow:
+    - from: source_app
+      to: target_app
+      trigger: submit
