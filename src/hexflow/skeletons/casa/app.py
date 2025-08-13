@@ -54,24 +54,21 @@ class CasaApp(HTTPBaseApp):
                 # Check if this is a workflow navigation POST (from router) or actual form submission
                 form_data = dict(request.form)
                 
-                # Get the field names that this form expects
-                form_config = self.form_config
-                expected_form_fields = {field['name'] for field in form_config.get('fields', [])}
-                
-                # Check if any of the expected form fields are present in the POST data
-                submitted_form_fields = set(form_data.keys()) & expected_form_fields
+                # The key insight: actual form submissions include an 'action' field from the submit button
+                # Workflow navigation from router does not include this field
+                is_form_submission = form_data.get('action') == 'submit'
                 
                 # Debug: print what we found
                 print(f"DEBUG: POST data keys: {list(form_data.keys())}")
-                print(f"DEBUG: Expected form fields: {expected_form_fields}")
-                print(f"DEBUG: Submitted form fields: {submitted_form_fields}")
+                print(f"DEBUG: Action field: {form_data.get('action')}")
+                print(f"DEBUG: Is form submission: {is_form_submission}")
                 
-                if not submitted_form_fields:
-                    # No form fields from this app are present - this is workflow navigation
+                if not is_form_submission:
+                    # No 'action=submit' present - this is workflow navigation from router
                     print("DEBUG: Treating as workflow navigation - no validation")
                     return self.render_form()  # No errors passed = no validation errors shown
                 else:
-                    # Form fields are present - this is an actual form submission
+                    # 'action=submit' present - this is an actual form submission by user
                     print("DEBUG: Treating as form submission - validating")
                     return self.handle_form_submission()  # This will call render_form(errors) if validation fails
     
