@@ -1,0 +1,20 @@
+{% extends "gds_base.html" %}
+
+{% block content %}
+<h1 class="govuk-heading-xl">{{ title }}</h1>
+
+<form action="http://localhost:8000/next" method="post" novalidate>
+    <input type="hidden" name="from" value="{{ app_name }}">
+    <input type="hidden" name="workflow_token" value="{{ workflow_token }}">
+    
+    {% for field_html in fields_html %}
+        {{ field_html|safe }}
+    {% endfor %}
+    
+    <div class="govuk-button-group">
+        <button type="submit" name="action" value="submit" class="govuk-button" data-module="govuk-button">
+            {{ submit_text }}
+        </button>
+    </div>
+</form>
+{% endblock %}

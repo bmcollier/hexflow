@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Custom fishing license form styling */
+        body { 
+            font-family: 'Georgia', serif; 
+            max-width: 700px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            min-height: 100vh;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1976d2;
+        }
+        
+        h1 { 
+            color: #1976d2; 
+            margin: 0;
+            font-size: 2.2em;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        
+        .form-group { 
+            margin-bottom: 25px; 
+        }
+        
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: bold; 
+            color: #333;
+        }
+        
+        input, select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 6px; 
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 5px rgba(25, 118, 210, 0.3);
+        }
+        
+        .error { 
+            color: #d32f2f; 
+            font-size: 14px; 
+            margin-top: 5px; 
+            font-weight: bold;
+        }
+        
+        button { 
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        button:hover { 
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .fishing-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="header">
+            <div class="fishing-icon">🎣</div>
+            <h1>{{ title }}</h1>
+            <div class="subtitle">Official UK Fishing License Application</div>
+        </div>
+        
+        <form action="http://localhost:8000/next" method="post">
+            <input type="hidden" name="from" value="{{ app_name }}">
+            <input type="hidden" name="workflow_token" value="{{ workflow_token }}">
+            
+            {% for field_html in fields_html %}
+                {{ field_html|safe }}
+            {% endfor %}
+            
+            <div class="form-group">
+                <button type="submit" name="action" value="submit">{{ submit_text }} →</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

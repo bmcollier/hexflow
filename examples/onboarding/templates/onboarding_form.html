@@ -1,0 +1,114 @@
+{% extends "onboarding_base.html" %}
+
+{% block extra_styles %}
+.form-group { 
+    margin-bottom: 30px; 
+}
+
+label { 
+    display: block; 
+    margin-bottom: 10px; 
+    font-weight: 600; 
+    color: #374151;
+    font-size: 1.05em;
+}
+
+input, select, textarea { 
+    width: 100%; 
+    padding: 16px; 
+    border: 2px solid #d1d5db; 
+    border-radius: 10px; 
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+    box-sizing: border-box;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.error { 
+    color: #dc2626; 
+    font-size: 14px; 
+    margin-top: 8px; 
+    font-weight: 500;
+    background: #fef2f2;
+    padding: 10px;
+    border-radius: 6px;
+    border-left: 4px solid #dc2626;
+}
+
+button { 
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); 
+    color: white; 
+    padding: 18px 40px; 
+    border: none; 
+    border-radius: 12px; 
+    cursor: pointer; 
+    font-size: 18px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+}
+
+button:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+}
+
+.help-text {
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+.welcome-message {
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+    border-left: 4px solid #10b981;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    color: #065f46;
+}
+
+.required-field::after {
+    content: " *";
+    color: #dc2626;
+}
+{% endblock %}
+
+{% block progress %}
+<div class="progress-bar">
+    <div class="progress-fill" style="width: {{ progress_percentage|default(25) }}%"></div>
+</div>
+<div class="step-info">
+    Step {{ current_step|default(1) }} of {{ total_steps|default(4) }} - {{ step_description|default("Getting Started") }}
+</div>
+{% endblock %}
+
+{% block main_content %}
+{% if welcome_message %}
+<div class="welcome-message">
+    <strong>👋 Welcome!</strong> {{ welcome_message }}
+</div>
+{% endif %}
+
+<form action="http://localhost:8000/next" method="post">
+    <input type="hidden" name="from" value="{{ app_name }}">
+    <input type="hidden" name="workflow_token" value="{{ workflow_token }}">
+    
+    {% for field_html in fields_html %}
+        {{ field_html|safe }}
+    {% endfor %}
+    
+    <div class="form-group">
+        <button type="submit" name="action" value="submit">{{ submit_text }} →</button>
+    </div>
+</form>
+{% endblock %}

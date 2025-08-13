@@ -1,18 +1,27 @@
 """Casa application skeleton for form-based applications."""
 
-from flask import request, render_template_string
+from flask import request, render_template_string, render_template
 from ..http_base.app import HTTPBaseApp
 from typing import Dict, List, Any, Optional
+import os
 
 
 class CasaApp(HTTPBaseApp):
     """Form-based application that extends HTTPBaseApp."""
     
     def __init__(self, name: str = "casa-app", host: str = 'localhost', port: int = 8000):
+        print(f"INIT DEBUG: CasaApp.__init__ called for {name}")
         try:
             super().__init__(name, host, port)
             self.name = name  # Store name for template usage
+            
+            # Set up template folder for Jinja2
+            template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+            if os.path.exists(template_dir):
+                self.app.template_folder = template_dir
+                
             self.form_config = self.setup_form()
+            print(f"INIT DEBUG: CasaApp setup complete for {name}")
         except TypeError as e:
             if "unexpected keyword argument" in str(e):
                 raise TypeError(f"CasaApp constructor requires 'name', 'host', and 'port' parameters. "
@@ -34,65 +43,120 @@ class CasaApp(HTTPBaseApp):
     
     def setup_routes(self):
         """Setup form routes with GET and POST handling."""
+        print(f"ROUTE DEBUG: CasaApp.setup_routes called")
         
         @self.app.route('/', methods=['GET', 'POST'])
         def form_handler():
+            print(f"HANDLER DEBUG: CasaApp form_handler called with {request.method}")
             if request.method == 'GET':
                 return self.render_form()
             else:
-                return self.handle_form_submission()
+                # Check if this is a workflow navigation POST (from router) or actual form submission
+                form_data = dict(request.form)
+                
+                # Get the field names that this form expects
+                form_config = self.form_config
+                expected_form_fields = {field['name'] for field in form_config.get('fields', [])}
+                
+                # Check if any of the expected form fields are present in the POST data
+                submitted_form_fields = set(form_data.keys()) & expected_form_fields
+                
+                # Debug: print what we found
+                print(f"DEBUG: POST data keys: {list(form_data.keys())}")
+                print(f"DEBUG: Expected form fields: {expected_form_fields}")
+                print(f"DEBUG: Submitted form fields: {submitted_form_fields}")
+                
+                if not submitted_form_fields:
+                    # No form fields from this app are present - this is workflow navigation
+                    print("DEBUG: Treating as workflow navigation - no validation")
+                    print("DEBUG: Calling render_form() with no errors")
+                    return self.render_form()
+                else:
+                    # Form fields are present - this is an actual form submission
+                    print("DEBUG: Treating as form submission - validating")
+                    return self.handle_form_submission()
     
     def render_form(self, errors: Dict[str, str] = None) -> str:
         """Render the form HTML."""
+        # Debug logging
         form_config = self.form_config
         errors = errors or {}
         
+        # IMPORTANT: Only show validation errors after actual form submission,
+        # not on initial GET or workflow navigation POST
+        should_show_errors = False
+        
+        if request.method == 'POST':
+            # Check if this POST contains data from THIS form (actual submission)
+            # vs. workflow navigation data from previous forms
+            form_data = dict(request.form)
+            expected_form_fields = {field['name'] for field in form_config.get('fields', [])}
+            submitted_form_fields = set(form_data.keys()) & expected_form_fields
+            
+            # Only show errors if this form's fields were actually submitted
+            should_show_errors = bool(submitted_form_fields)
+            
+        # If we shouldn't show errors, clear them
+        if not should_show_errors:
+            errors = {}
+            
+        if errors:
+            print(f"BASE DEBUG: Showing validation errors: {list(errors.keys())}")
+
         # Build form fields HTML
         fields_html = []
         for field in form_config.get('fields', []):
             field_html = self.render_field(field, errors.get(field['name'], ''))
             fields_html.append(field_html)
         
-        template = '''
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>{{ title }}</title>
-            <style>
-                body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-                .form-group { margin-bottom: 20px; }
-                label { display: block; margin-bottom: 5px; font-weight: bold; }
-                input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-                .error { color: red; font-size: 14px; margin-top: 5px; }
-                button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-                button:hover { background: #005a87; }
-                .next-button { background: #28a745; margin-left: 10px; }
-                .next-button:hover { background: #218838; }
-            </style>
-        </head>
-        <body>
-            <h1>{{ title }}</h1>
-            <form action="http://localhost:8000/next" method="post">
-                <input type="hidden" name="from" value="{{ app_name }}">
-                <input type="hidden" name="workflow_token" value="{{ workflow_token }}">
-                {{ fields_html|safe }}
-                <div class="form-group">
-                    <button type="submit" name="action" value="submit">{{ submit_text }}</button>
-                    <button type="submit" name="action" value="next" class="next-button">Next →</button>
-                </div>
-            </form>
-        </body>
-        </html>
-        '''
-        
         workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
         
-        return render_template_string(template, 
-                                    title=form_config.get('title', 'Form'),
-                                    fields_html=''.join(fields_html),
-                                    submit_text=form_config.get('submit_text', 'Submit'),
-                                    app_name=self.name,
-                                    workflow_token=workflow_token)
+        # Try to use Jinja2 template, fall back to inline template if not found
+        try:
+            return render_template('form.html',
+                                title=form_config.get('title', 'Form'),
+                                fields_html=fields_html,
+                                submit_text=form_config.get('submit_text', 'Submit'),
+                                app_name=self.name,
+                                workflow_token=workflow_token)
+        except Exception as e:
+            print(f"Template error: {e}, falling back to inline template for backward compatibility")
+            # Fallback to inline template for backward compatibility
+            template = '''
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>{{ title }}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+                    .form-group { margin-bottom: 20px; }
+                    label { display: block; margin-bottom: 5px; font-weight: bold; }
+                    input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+                    .error { color: red; font-size: 14px; margin-top: 5px; }
+                    button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+                    button:hover { background: #005a87; }
+                </style>
+            </head>
+            <body>
+                <h1>{{ title }}</h1>
+                <form action="http://localhost:8000/next" method="post">
+                    <input type="hidden" name="from" value="{{ app_name }}">
+                    <input type="hidden" name="workflow_token" value="{{ workflow_token }}">
+                    {{ fields_html|safe }}
+                    <div class="form-group">
+                        <button type="submit" name="action" value="submit">{{ submit_text }}</button>
+                    </div>
+                </form>
+            </body>
+            </html>
+            '''
+            
+            return render_template_string(template, 
+                                        title=form_config.get('title', 'Form'),
+                                        fields_html=''.join(fields_html),
+                                        submit_text=form_config.get('submit_text', 'Submit'),
+                                        app_name=self.name,
+                                        workflow_token=workflow_token)
     
     def render_field(self, field: Dict[str, Any], error: str = '') -> str:
         """Render a single form field."""

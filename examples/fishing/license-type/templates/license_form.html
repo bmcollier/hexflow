@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Fishing license selection theme */
+        body { 
+            font-family: 'Arial', sans-serif; 
+            max-width: 800px; 
+            margin: 30px auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            min-height: 100vh;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 4px solid #2e7d32;
+        }
+        
+        h1 { 
+            color: #2e7d32; 
+            margin: 0;
+            font-size: 2.4em;
+            font-weight: bold;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-top: 15px;
+        }
+        
+        .license-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .form-group { 
+            margin-bottom: 30px; 
+        }
+        
+        label { 
+            display: block; 
+            margin-bottom: 10px; 
+            font-weight: bold; 
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        select, input[type="date"] { 
+            width: 100%; 
+            padding: 15px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        select:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: #2e7d32;
+            box-shadow: 0 0 8px rgba(46, 125, 50, 0.3);
+        }
+        
+        /* Custom styling for license options */
+        select option {
+            padding: 10px;
+            font-size: 16px;
+        }
+        
+        /* Checkbox styling */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-group:hover {
+            border-color: #2e7d32;
+            background: #e8f5e8;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            accent-color: #2e7d32;
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        
+        .help-text {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
+        }
+        
+        .error { 
+            color: #d32f2f; 
+            font-size: 14px; 
+            margin-top: 8px; 
+            font-weight: bold;
+            background: #ffebee;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        button { 
+            background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%); 
+            color: white; 
+            padding: 18px 40px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 20px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        button:hover { 
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .price-highlight {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="header">
+            <div class="license-icon">🎣📋</div>
+            <h1>{{ title }}</h1>
+            <div class="subtitle">Select Your License Type & Preferences</div>
+        </div>
+        
+        <form action="http://localhost:8000/next" method="post">
+            <input type="hidden" name="from" value="{{ app_name }}">
+            <input type="hidden" name="workflow_token" value="{{ workflow_token }}">
+            
+            {% for field_html in fields_html %}
+                {{ field_html|safe }}
+            {% endfor %}
+            
+            <div class="form-group">
+                <button type="submit" name="action" value="submit">{{ submit_text }} →</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% for section_html in sections_html %}
+    {{ section_html|safe }}
+{% endfor %}
+
+{{ workflow_data_html|safe }}
+
+<div class="completion-message">
+    {{ completion_message }}
+</div>
+{% endblock %}

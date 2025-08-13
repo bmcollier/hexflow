@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{{ title }} - Employee Onboarding{% endblock %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Professional onboarding theme */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/><circle cx="20" cy="20" r="1" fill="white" opacity="0.1"/><circle cx="80" cy="30" r="1.5" fill="white" opacity="0.1"/><circle cx="30" cy="80" r="1" fill="white" opacity="0.1"/><circle cx="70" cy="70" r="1.2" fill="white" opacity="0.1"/></svg>') repeat;
+            pointer-events: none;
+        }
+        
+        .company-logo {
+            font-size: 3em;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 { 
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-top: 10px;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .content {
+            padding: 50px;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .step-info {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #6b7280;
+        }
+        
+        {% block extra_styles %}{% endblock %}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="company-logo">🏢</div>
+            <h1>{% block heading %}{{ title }}{% endblock %}</h1>
+            <div class="subtitle">Welcome to Your Journey with Us</div>
+        </div>
+        
+        <div class="content">
+            {% block progress %}{% endblock %}
+            
+            {% block main_content %}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,7 +1,16 @@
 from hexflow.skeletons.casa.app import CasaApp
+import os
 
 class LicenseTypeApp(CasaApp):
     """Allow users to select their fishing license type and duration."""
+    
+    def __init__(self, name="license-type", host='localhost', port=8002):
+        super().__init__(name=name, host=host, port=port)
+        
+        # Set up custom template folder 
+        custom_template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+        if os.path.exists(custom_template_dir):
+            self.app.template_folder = custom_template_dir
     
     def setup_form(self):
         """Define form fields for license type selection."""
@@ -56,6 +65,60 @@ class LicenseTypeApp(CasaApp):
                 }
             }
         }
+    
+    def render_form(self, errors=None):
+        """Override to use custom template name."""
+        from flask import render_template, request
+        
+        form_config = self.form_config
+        errors = errors or {}
+        
+        # Build form fields HTML with custom checkbox styling
+        fields_html = []
+        for field in form_config.get('fields', []):
+            if field['type'] == 'checkbox':
+                field_html = self.render_checkbox_field(field, errors.get(field['name'], ''))
+            else:
+                field_html = self.render_field(field, errors.get(field['name'], ''))
+            fields_html.append(field_html)
+        
+        workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
+        
+        # Try to use custom template first
+        try:
+            return render_template('license_form.html',
+                                title=form_config.get('title', 'Form'),
+                                fields_html=fields_html,
+                                submit_text=form_config.get('submit_text', 'Continue'),
+                                app_name=self.name,
+                                workflow_token=workflow_token)
+        except Exception:
+            # Fall back to parent class behavior
+            return super().render_form(errors)
+    
+    def render_checkbox_field(self, field, error=''):
+        """Render checkbox with custom styling for license form."""
+        field_name = field['name']
+        field_label = field.get('label', field_name.replace('_', ' ').title())
+        field_value = field.get('value', 'yes')
+        help_text = field.get('help_text', '')
+        
+        from flask import request
+        is_checked = request.form.get(field_name, '') == field_value or request.args.get(field_name, '') == field_value
+        
+        error_html = f'<div class="error">{error}</div>' if error else ''
+        help_html = f'<div class="help-text">{help_text}</div>' if help_text else ''
+        
+        return f'''
+        <div class="form-group">
+            {error_html}
+            <div class="checkbox-group">
+                <input type="checkbox" name="{field_name}" id="{field_name}" value="{field_value}" {'checked' if is_checked else ''}>
+                <label for="{field_name}">{field_label}</label>
+            </div>
+            {help_html}
+        </div>
+        '''
 
 if __name__ == "__main__":
     app = LicenseTypeApp(name="license-type", port=8002)

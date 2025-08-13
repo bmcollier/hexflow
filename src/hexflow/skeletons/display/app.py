@@ -1,8 +1,9 @@
 """Display application skeleton for read-only confirmation pages."""
 
-from flask import request, render_template_string, has_request_context
+from flask import request, render_template_string, render_template, has_request_context
 from ..http_base.app import HTTPBaseApp
 from typing import Dict, List, Any, Optional
+import os
 
 
 class DisplayApp(HTTPBaseApp):
@@ -12,6 +13,12 @@ class DisplayApp(HTTPBaseApp):
         try:
             super().__init__(name, host, port)
             self.name = name  # Store name for template usage
+            
+            # Set up template folder for Jinja2
+            template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+            if os.path.exists(template_dir):
+                self.app.template_folder = template_dir
+                
             # Don't call setup_display() here - it may need request context
         except TypeError as e:
             if "unexpected keyword argument" in str(e):
@@ -109,11 +116,21 @@ class DisplayApp(HTTPBaseApp):
             </html>
             '''
             
-            return render_template_string(template,
-                                        title=display_config.get('title', 'Confirmation'),
-                                        sections_html=''.join(sections_html),
-                                        workflow_data_html=workflow_data_html,
-                                        completion_message=display_config.get('completion_message', 'Thank you!'))
+            # Try to use Jinja2 template, fall back to inline template if not found
+            try:
+                return render_template('display.html',
+                                    title=display_config.get('title', 'Confirmation'),
+                                    sections_html=sections_html,
+                                    workflow_data_html=workflow_data_html,
+                                    completion_message=display_config.get('completion_message', 'Thank you!'))
+            except Exception as e:
+                print(f"Template error: {e}, falling back to inline template")
+                # Fallback to inline template
+                return render_template_string(template,
+                                            title=display_config.get('title', 'Confirmation'),
+                                            sections_html=''.join(sections_html),
+                                            workflow_data_html=workflow_data_html,
+                                            completion_message=display_config.get('completion_message', 'Thank you!'))
     
     def render_section(self, section: Dict[str, Any]) -> str:
         """Render a display section."""

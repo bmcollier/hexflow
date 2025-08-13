@@ -1,0 +1,17 @@
+{% extends "gds_base.html" %}
+
+{% block content %}
+<div class="govuk-panel govuk-panel--confirmation">
+    <h1 class="govuk-panel__title">{{ title }}</h1>
+</div>
+
+{% for section_html in sections_html %}
+    {{ section_html|safe }}
+{% endfor %}
+
+{{ workflow_data_html|safe }}
+
+<div class="govuk-inset-text">
+    {{ completion_message }}
+</div>
+{% endblock %}

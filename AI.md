@@ -1173,3 +1173,361 @@ Key Framework Patterns
   This would help prevent the signature
   mismatch and incorrect data access patterns
   that caused the original error.
+
+## 🎨 Template System & Jinja2 Integration
+
+### Jinja2 Templating Overview
+
+**ALL skeleton apps now include Jinja2 templating with automatic inheritance and customization capabilities.**
+
+The template system provides:
+- **Automatic template inheritance** - subclasses get parent templates for free
+- **Easy customization** - override templates by setting custom template folders
+- **Professional styling** - built-in themes for different use cases
+- **Fallback safety** - always falls back to inline HTML if templates fail
+
+### Template Inheritance in Subclassing
+
+When you subclass any skeleton (CasaApp, DisplayApp, HTTPBaseApp), template inheritance works automatically:
+
+#### 1. Automatic Template Inheritance (Default Behavior)
+
+```python
+from hexflow.skeletons.display.app import DisplayApp
+
+class MyConfirmationApp(DisplayApp):
+    """Automatically inherits DisplayApp's Jinja2 templates."""
+    
+    def setup_display(self, workflow_data=None):
+        # This data gets passed to parent's display.html template
+        return {
+            'title': 'Order Confirmation',
+            'sections': [
+                {
+                    'title': 'Order Details', 
+                    'items': [
+                        {'label': 'Order ID', 'value': workflow_data.get('order_id')},
+                        {'label': 'Total', 'value': workflow_data.get('total')}
+                    ]
+                }
+            ],
+            'completion_message': 'Your order has been confirmed!'
+        }
+```
+
+**What happens automatically:**
+- Parent sets: `self.app.template_folder = "src/hexflow/skeletons/display/templates"`
+- Subclass inherits this template folder setting
+- Parent's `display.html`, `base.html` templates are used
+- Your data gets rendered with professional styling
+
+#### 2. Template Override (Custom Styling)
+
+```python
+from hexflow.skeletons.casa.app import CasaApp
+import os
+
+class CustomStyledForm(CasaApp):
+    """Form with custom branded templates."""
+    
+    def __init__(self, name="custom-form", host='localhost', port=8001):
+        super().__init__(name=name, host=host, port=port)
+        
+        # Override with custom templates
+        custom_template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+        if os.path.exists(custom_template_dir):
+            self.app.template_folder = custom_template_dir
+            # Now uses YOUR custom templates instead of parent's
+    
+    def setup_form(self):
+        return {
+            'title': 'Branded Application Form',
+            'fields': [...]  # Same data structure, different styling
+        }
+```
+
+**Directory structure for custom templates:**
+```
+my-custom-app/
+├── app.py
+├── templates/           # Custom template override
+│   ├── form.html       # Overrides parent's form.html
+│   └── base.html       # Custom base styling
+└── __init__.py
+```
+
+#### 3. Shared Template Inheritance
+
+Multiple apps can share templates by pointing to the same directory:
+
+```python
+# Government apps sharing GDS templates
+class PersonalDetailsApp(GDSCasaApp):
+    # Automatically uses shared GDS templates from:
+    # examples/government/skeletons/templates/
+    pass
+
+class LibraryPreferencesApp(GDSCasaApp):
+    # Also uses the SAME shared GDS templates
+    # All government apps have consistent GOV.UK styling
+    pass
+```
+
+### Template Inheritance Resolution Order
+
+The framework resolves templates in this order:
+
+1. **Custom templates** (if `self.app.template_folder` is overridden)
+2. **Parent skeleton templates** (automatic inheritance)
+3. **Inline fallback templates** (for backward compatibility)
+
+```python
+# Template resolution example
+class MyDisplayApp(DisplayApp):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        # Try custom templates first
+        custom_dir = os.path.join(os.path.dirname(__file__), 'templates')
+        if os.path.exists(custom_dir):
+            self.app.template_folder = custom_dir  # Priority 1: Custom
+        # Otherwise keeps parent templates automatically   # Priority 2: Parent
+        # Framework falls back to inline HTML             # Priority 3: Fallback
+```
+
+### Built-in Template Themes
+
+The framework includes several professional template themes:
+
+#### CasaApp Templates
+- **Location**: `src/hexflow/skeletons/casa/templates/`
+- **Files**: `base.html`, `form.html`
+- **Style**: Clean, professional forms with validation styling
+
+#### DisplayApp Templates  
+- **Location**: `src/hexflow/skeletons/display/templates/`
+- **Files**: `base.html`, `display.html`
+- **Style**: Confirmation pages with section layouts
+
+#### Government GDS Templates
+- **Location**: `examples/government/skeletons/templates/`
+- **Files**: `gds_base.html`, `gds_form.html`, `gds_display.html`
+- **Style**: Official GOV.UK Design System compliance
+
+#### Example-Specific Themes
+- **Fishing**: Custom blue ocean theme with fishing icons
+- **Onboarding**: Corporate gradient theme with progress indicators
+- **Self-Test**: Pink/purple gradient theme for testing workflows
+
+### Template Variable Reference
+
+Templates receive these standard variables from the framework:
+
+#### Form Templates (CasaApp)
+```jinja2
+{{ title }}           - Form title
+{{ fields_html }}     - Array of rendered form fields (use with |safe)  
+{{ submit_text }}     - Button text
+{{ app_name }}        - Application name
+{{ workflow_token }}  - Workflow session token
+```
+
+#### Display Templates (DisplayApp)
+```jinja2
+{{ title }}              - Page title
+{{ sections_html }}      - Array of rendered sections (use with |safe)
+{{ workflow_data_html }} - Rendered workflow data summary (use with |safe)
+{{ completion_message }} - Completion message text
+```
+
+#### GDS Templates (Government Apps)
+```jinja2
+{{ govuk_css }}       - GOV.UK Frontend CSS content (loaded from assets)
+{# All standard variables plus GDS-specific styling #}
+```
+
+### Custom Template Creation
+
+#### Creating Custom Form Templates
+
+```html
+<!-- templates/my_form.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }} - My Brand</title>
+    <style>
+        /* Your custom branding */
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .form-container { /* Custom form styling */ }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>🏢 {{ title }}</h1>
+        
+        <form action="http://localhost:8000/next" method="post">
+            <input type="hidden" name="from" value="{{ app_name }}">
+            <input type="hidden" name="workflow_token" value="{{ workflow_token }}">
+            
+            {% for field_html in fields_html %}
+                {{ field_html|safe }}
+            {% endfor %}
+            
+            <button type="submit">{{ submit_text }}</button>
+        </form>
+    </div>
+</body>
+</html>
+```
+
+#### Using Custom Templates in Subclass
+
+```python
+class MyBrandedApp(CasaApp):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        # Set custom template folder
+        template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+        if os.path.exists(template_dir):
+            self.app.template_folder = template_dir
+    
+    def render_form(self, errors=None):
+        """Override to use custom template name."""
+        # ... build fields_html ...
+        
+        try:
+            return render_template('my_form.html',  # Custom template name
+                                title=self.form_config.get('title'),
+                                fields_html=fields_html,
+                                submit_text=self.form_config.get('submit_text'),
+                                app_name=self.name,
+                                workflow_token=workflow_token)
+        except Exception:
+            return super().render_form(errors)  # Fallback to parent
+```
+
+### Template Inheritance Benefits
+
+#### 1. Zero Configuration Inheritance
+```python
+# This works immediately with professional templates
+class MyApp(CasaApp):
+    def setup_form(self):
+        return {'title': 'My Form', 'fields': [...]}
+```
+
+#### 2. Easy Brand Customization
+```python
+# Just add templates/ directory for custom styling
+class BrandedApp(CasaApp):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app.template_folder = 'my_templates'  # Custom branding
+```
+
+#### 3. Consistent Framework Updates
+- Framework template improvements benefit all subclasses automatically
+- Template structure remains stable across versions
+- Fallback ensures compatibility even with custom overrides
+
+#### 4. Theme Sharing
+```python
+# Multiple apps share the same branded templates
+class FormOne(CasaApp):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app.template_folder = '../shared_brand_templates'
+
+class FormTwo(CasaApp):  
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app.template_folder = '../shared_brand_templates'  # Same branding
+```
+
+### Template Development Best Practices
+
+#### 1. Always Provide Fallbacks
+```python
+def render_form(self, errors=None):
+    try:
+        return render_template('custom.html', **data)
+    except Exception:
+        return super().render_form(errors)  # Always fallback to parent
+```
+
+#### 2. Preserve Template Variable Contracts
+```python
+# Custom templates must accept the same variables as parent templates
+return render_template('custom.html',
+                     title=title,           # Required by framework
+                     fields_html=fields,    # Required by framework  
+                     submit_text=submit,    # Required by framework
+                     app_name=self.name,    # Required by framework
+                     workflow_token=token,  # Required by framework
+                     # ... custom variables OK to add
+                     brand_logo=logo_url)
+```
+
+#### 3. Use Template Inheritance (extends/blocks)
+```html
+<!-- base_brand.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}
+    <title>{% block title %}{{ title }}{% endblock %} - My Brand</title>
+    <link rel="stylesheet" href="brand.css">
+    {% endblock %}
+</head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>
+
+<!-- form.html -->
+{% extends "base_brand.html" %}
+{% block content %}
+<form>{{ fields_html|safe }}</form>
+{% endblock %}
+```
+
+### Template Debugging
+
+#### 1. Template Loading Errors
+```python
+# Add debugging to see template resolution
+def render_form(self, errors=None):
+    print(f"Template folder: {self.app.template_folder}")
+    try:
+        return render_template('form.html', **data)
+    except Exception as e:
+        print(f"Template error: {e}, falling back to parent")
+        return super().render_form(errors)
+```
+
+#### 2. Template Variable Debugging  
+```html
+<!-- Add debug info to templates during development -->
+<div style="display: none;">
+    Debug: app_name={{ app_name }}, workflow_token={{ workflow_token }}
+</div>
+```
+
+### Template System Architecture
+
+#### How Template Inheritance Works Internally
+
+1. **Parent Constructor**: Sets `self.app.template_folder = parent_template_path`
+2. **Subclass Constructor**: Can override `self.app.template_folder = custom_path`
+3. **Flask Resolution**: Flask automatically finds templates in the configured folder
+4. **Fallback Pattern**: Framework code wraps `render_template` in try/catch blocks
+
+#### Framework Template Locations
+
+- **Core Skeletons**: `src/hexflow/skeletons/{skeleton_name}/templates/`
+- **Example Themes**: `examples/{workflow}/templates/` or `examples/{workflow}/skeletons/templates/`
+- **Custom Apps**: `{app_directory}/templates/`
+
+This template inheritance system allows AI agents to create professionally styled applications with minimal effort, while providing complete customization flexibility when needed.

@@ -15,6 +15,11 @@ class PersonalInfoApp(CasaApp):
     
     def __init__(self, name="personal-info", host='localhost', port=8001):
         super().__init__(name=name, host=host, port=port)
+        
+        # Set up shared onboarding template folder 
+        template_dir = os.path.join(os.path.dirname(__file__), '..', 'templates')
+        if os.path.exists(template_dir):
+            self.app.template_folder = template_dir
     
     def setup_form(self):
         """Define personal information form fields."""
@@ -124,6 +129,38 @@ class PersonalInfoApp(CasaApp):
             },
             'submit_text': 'Continue to Job Details'
         }
+    
+    def render_form(self, errors=None):
+        """Override to use onboarding template with progress information."""
+        from flask import render_template, request
+        
+        form_config = self.form_config
+        errors = errors or {}
+        
+        # Build form fields HTML
+        fields_html = []
+        for field in form_config.get('fields', []):
+            field_html = self.render_field(field, errors.get(field['name'], ''))
+            fields_html.append(field_html)
+        
+        workflow_token = request.form.get('workflow_token', '') or request.args.get('workflow_token', '')
+        
+        # Try to use onboarding template
+        try:
+            return render_template('onboarding_form.html',
+                                title=form_config.get('title', 'Personal Information'),
+                                fields_html=fields_html,
+                                submit_text=form_config.get('submit_text', 'Continue'),
+                                app_name=self.name,
+                                workflow_token=workflow_token,
+                                current_step=1,
+                                total_steps=4,
+                                progress_percentage=25,
+                                step_description="Personal Information",
+                                welcome_message="Let's start by collecting your basic information. This helps us set up your employee profile and ensure we can contact you.")
+        except Exception:
+            # Fall back to parent class behavior
+            return super().render_form(errors)
 
 
 if __name__ == "__main__":

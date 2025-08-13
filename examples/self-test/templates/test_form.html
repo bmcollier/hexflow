@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Simple test form theme */
+        body { 
+            font-family: 'Roboto', 'Arial', sans-serif; 
+            max-width: 600px; 
+            margin: 40px auto; 
+            padding: 30px; 
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f5576c;
+        }
+        
+        h1 { 
+            color: #f5576c; 
+            margin: 0;
+            font-size: 2.2em;
+            font-weight: bold;
+        }
+        
+        .test-info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 5px;
+            color: #856404;
+        }
+        
+        .form-group { 
+            margin-bottom: 25px; 
+        }
+        
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: bold; 
+            color: #333;
+        }
+        
+        input, select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #f5576c;
+            box-shadow: 0 0 5px rgba(245, 87, 108, 0.3);
+        }
+        
+        .error { 
+            color: #dc3545; 
+            font-size: 14px; 
+            margin-top: 5px; 
+            font-weight: bold;
+        }
+        
+        button { 
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%); 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+            width: 100%;
+        }
+        
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+        }
+        
+        .step-indicator {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="header">
+            <h1>🧪 {{ title }}</h1>
+        </div>
+        
+        {% if app_name %}
+        <div class="step-indicator">
+            Testing Step: {{ app_name|replace('-', ' ')|title }}
+        </div>
+        {% endif %}
+        
+        <div class="test-info">
+            <strong>ℹ️ Test Information:</strong> This is a test application for validating the Hexflow workflow system. Enter any test data to proceed.
+        </div>
+        
+        <form action="http://localhost:8000/next" method="post">
+            <input type="hidden" name="from" value="{{ app_name }}">
+            <input type="hidden" name="workflow_token" value="{{ workflow_token }}">
+            
+            {% for field_html in fields_html %}
+                {{ field_html|safe }}
+            {% endfor %}
+            
+            <div class="form-group">
+                <button type="submit" name="action" value="submit">{{ submit_text }}</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

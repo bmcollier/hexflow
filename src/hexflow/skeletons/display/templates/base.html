@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% block head %}
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 700px; margin: 50px auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .section { background: #f8f9fa; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #007cba; }
+        .section h3 { margin-top: 0; color: #007cba; }
+        .data-item { margin-bottom: 10px; }
+        .data-label { font-weight: bold; color: #333; }
+        .data-value { color: #666; margin-left: 10px; }
+        .completion-message { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; text-align: center; margin-top: 30px; border: 1px solid #c3e6cb; }
+        .workflow-data { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .workflow-step { margin-bottom: 15px; }
+        .step-title { font-weight: bold; color: #007cba; margin-bottom: 8px; }
+        .empty-data { color: #999; font-style: italic; }
+    </style>
+    {% endblock %}
+</head>
+<body>
+    {% block body %}
+    <div class="header">
+        <h1>{% block heading %}{{ title }}{% endblock %}</h1>
+    </div>
+    {% block content %}{% endblock %}
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }} - Custom Subclass Template</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Custom theme for subclassed DisplayApp */
+        body { 
+            font-family: 'Georgia', serif; 
+            max-width: 800px; 
+            margin: 50px auto; 
+            padding: 30px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 40px; 
+            padding-bottom: 30px;
+            border-bottom: 4px solid #667eea;
+        }
+        h1 { 
+            color: #667eea; 
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .subclass-badge {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        .section { 
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8ebff 100%); 
+            padding: 25px; 
+            margin-bottom: 25px; 
+            border-radius: 15px; 
+            border-left: 6px solid #667eea; 
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+        }
+        .section h3 { 
+            margin-top: 0; 
+            color: #667eea; 
+            font-size: 1.4em;
+        }
+        .data-item { 
+            margin-bottom: 15px; 
+            padding: 10px 0;
+            border-bottom: 1px solid #e8ebff;
+        }
+        .data-label { 
+            font-weight: bold; 
+            color: #4c51bf; 
+            display: inline-block;
+            min-width: 150px;
+        }
+        .data-value { 
+            color: #5a67d8; 
+            margin-left: 15px; 
+            font-style: italic;
+        }
+        .completion-message { 
+            background: linear-gradient(135deg, #48bb78 0%, #38b2ac 100%);
+            color: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            text-align: center; 
+            margin-top: 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        }
+        .template-info {
+            background: #fef5e7;
+            border: 2px dashed #f6ad55;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #c05621;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 {{ title }}</h1>
+            <div class="subclass-badge">Custom Subclass Template</div>
+        </div>
+        
+        <div class="template-info">
+            📁 This page is using a <strong>custom template</strong> that overrides the parent DisplayApp template!
+        </div>
+        
+        {% for section_html in sections_html %}
+            {{ section_html|safe }}
+        {% endfor %}
+
+        {{ workflow_data_html|safe }}
+
+        <div class="completion-message">
+            {{ completion_message }}
+        </div>
+    </div>
+</body>
+</html>

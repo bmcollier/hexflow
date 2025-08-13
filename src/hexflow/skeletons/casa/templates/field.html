@@ -1,0 +1,43 @@
+{# Template for rendering individual form fields #}
+{% if field_type == 'select' %}
+<div class="form-group {{ 'error' if error else '' }}">
+    <label for="{{ field_name }}">{{ field_label }}</label>
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+    <select name="{{ field_name }}" id="{{ field_name }}" {{ 'required' if required else '' }}>
+        <option value="">Choose an option</option>
+        {% for option in options %}
+            {% if option is mapping %}
+                <option value="{{ option.value }}" {{ 'selected' if field_value == option.value else '' }}>{{ option.text }}</option>
+            {% else %}
+                <option value="{{ option }}" {{ 'selected' if field_value == option else '' }}>{{ option }}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+</div>
+{% elif field_type == 'textarea' %}
+<div class="form-group {{ 'error' if error else '' }}">
+    <label for="{{ field_name }}">{{ field_label }}</label>
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+    <textarea name="{{ field_name }}" id="{{ field_name }}" rows="{{ rows or 5 }}" {{ 'required' if required else '' }}>{{ field_value }}</textarea>
+</div>
+{% elif field_type == 'checkbox' %}
+<div class="form-group {{ 'error' if error else '' }}">
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+    <input type="checkbox" name="{{ field_name }}" id="{{ field_name }}" value="{{ checkbox_value or 'yes' }}" {{ 'checked' if field_value == (checkbox_value or 'yes') else '' }} {{ 'required' if required else '' }}>
+    <label for="{{ field_name }}">{{ field_label }}</label>
+</div>
+{% else %}
+<div class="form-group {{ 'error' if error else '' }}">
+    <label for="{{ field_name }}">{{ field_label }}</label>
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+    <input type="{{ field_type }}" name="{{ field_name }}" id="{{ field_name }}" value="{{ field_value }}" {{ 'placeholder="' + placeholder + '"' if placeholder else '' }} {{ 'required' if required else '' }}>
+</div>
+{% endif %}
