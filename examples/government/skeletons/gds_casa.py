@@ -27,9 +27,9 @@ class GDSCasaApp(CasaApp):
         form_config = self.form_config
         errors = errors or {}
         
-        # Debug logging (remove in production)
+        # Log validation errors if any
         if errors:
-            print(f"GDS DEBUG: Showing validation errors: {list(errors.keys())}")
+            print(f"Form validation errors: {list(errors.keys())}")
 
                 # Build form fields HTML
         fields_html = []
@@ -146,7 +146,7 @@ class GDSCasaApp(CasaApp):
                                 workflow_token=workflow_token,
                                 govuk_css=govuk_css)
         except Exception as e:
-            print(f"Template error: {e}, falling back to inline template")
+            print(f"Jinja2 template not found, using inline template fallback: {e}")
             # Fallback to inline template for backward compatibility
             return render_template_string(template, 
                                         title=form_config.get('title', 'Government Service'),

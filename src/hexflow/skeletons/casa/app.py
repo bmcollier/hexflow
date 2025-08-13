@@ -47,7 +47,7 @@ class CasaApp(HTTPBaseApp):
         
         @self.app.route('/', methods=['GET', 'POST'])
         def form_handler():
-            print(f"HANDLER DEBUG: CasaApp form_handler called with {request.method}")
+            # Form handler for GET and POST requests
             if request.method == 'GET':
                 return self.render_form()
             else:
@@ -59,17 +59,15 @@ class CasaApp(HTTPBaseApp):
                 is_form_submission = form_data.get('action') == 'submit'
                 
                 # Debug: print what we found
-                print(f"DEBUG: POST data keys: {list(form_data.keys())}")
-                print(f"DEBUG: Action field: {form_data.get('action')}")
-                print(f"DEBUG: Is form submission: {is_form_submission}")
+                # Check if user clicked submit button vs router navigation
                 
                 if not is_form_submission:
                     # No 'action=submit' present - this is workflow navigation from router
-                    print("DEBUG: Treating as workflow navigation - no validation")
+                    # Router navigation - display form without validation errors
                     return self.render_form()  # No errors passed = no validation errors shown
                 else:
                     # 'action=submit' present - this is an actual form submission by user
-                    print("DEBUG: Treating as form submission - validating")
+                    # User form submission - validate and process
                     return self.handle_form_submission()  # This will call render_form(errors) if validation fails
     
     def render_form(self, errors: Dict[str, str] = None) -> str:
@@ -249,28 +247,32 @@ class CasaApp(HTTPBaseApp):
         
         return errors
     
-    def process_form(self, form_data: Dict[str, str]) -> str:
-        """Process successfully validated form data. Override this method.
+    def process_form(self, form_data: Dict[str, str]):
+        """Process successfully validated form data and redirect to router.
         
         Args:
             form_data: Dictionary of validated form field names and values
             
         Returns:
-            HTML response for successful submission
+            Flask redirect response to router for next step
         """
+        # Form data is valid, redirect to router for workflow progression
+        # The router will handle data persistence and navigation to next step
+        import requests
         workflow_token = form_data.get('workflow_token', '')
-        return f'''
-        <h1>Form Submitted Successfully</h1>
-        <p>Thank you for your submission!</p>
-        <p><strong>Data received:</strong></p>
-        <ul>
-        {''.join([f"<li><strong>{key}:</strong> {value}</li>" for key, value in form_data.items() if key not in ['workflow_token', 'from', 'action']])}
-        </ul>
-        <form action="http://localhost:8000/next" method="post">
-            <input type="hidden" name="from" value="{self.name}">
-            <input type="hidden" name="workflow_token" value="{workflow_token}">
-            <button type="submit">Continue →</button>
-        </form>
+        
+        # Post form data to router for workflow progression
+        try:
+            # Prepare data for router (remove action field, keep form data)
+            router_data = {k: v for k, v in form_data.items() if k != 'action'}
+            router_data['from'] = self.name
+            
+            response = requests.post('http://localhost:8000/next', data=router_data)
+            if response.status_code == 200:
+                # Return the response from the router (next step or completion)
+                return response.text
+            else:
+                return f'<h1>Workflow Error</h1><p>Unable to proceed to next step. Status: {response.status_code}</p>'
         '''
 
 
