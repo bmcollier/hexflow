@@ -247,32 +247,62 @@ class CasaApp(HTTPBaseApp):
         
         return errors
     
-    def process_form(self, form_data: Dict[str, str]):
-        """Process successfully validated form data and redirect to router.
+    def process_form(self, form_data: Dict[str, str]) -> str:
+        """Process successfully validated form data and forward to router.
         
         Args:
             form_data: Dictionary of validated form field names and values
             
         Returns:
-            Flask redirect response to router for next step
+            HTML response with auto-submitting form to router
         """
-        # Form data is valid, redirect to router for workflow progression
-        # The router will handle data persistence and navigation to next step
-        import requests
-        workflow_token = form_data.get('workflow_token', '')
+        # Build hidden form fields for router (exclude action field)
+        hidden_fields = []
+        hidden_fields.append(f'<input type="hidden" name="from" value="{self.name}">')
         
-        # Post form data to router for workflow progression
-        try:
-            # Prepare data for router (remove action field, keep form data)
-            router_data = {k: v for k, v in form_data.items() if k != 'action'}
-            router_data['from'] = self.name
+        for key, value in form_data.items():
+            if key != 'action':  # Don't send the action field to router
+                if isinstance(value, list):
+                    # Handle multiple values (like checkboxes)
+                    for item in value:
+                        hidden_fields.append(f'<input type="hidden" name="{key}" value="{item}">')
+                else:
+                    hidden_fields.append(f'<input type="hidden" name="{key}" value="{value}">')
+        
+        return f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Processing...</title>
+            <meta charset="utf-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
+                .processing {{ margin: 20px 0; }}
+                .fallback {{ margin-top: 30px; padding: 20px; background: #f0f0f0; }}
+            </style>
+        </head>
+        <body>
+            <div class="processing">
+                <h2>Processing your submission...</h2>
+                <p>Please wait while we process your form and continue to the next step.</p>
+            </div>
             
-            response = requests.post('http://localhost:8000/next', data=router_data)
-            if response.status_code == 200:
-                # Return the response from the router (next step or completion)
-                return response.text
-            else:
-                return f'<h1>Workflow Error</h1><p>Unable to proceed to next step. Status: {response.status_code}</p>'
+            <form id="router-form" action="http://localhost:8000/next" method="post">
+                {''.join(hidden_fields)}
+                <div class="fallback">
+                    <p><strong>If this page doesn't redirect automatically:</strong></p>
+                    <button type="submit" style="background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Continue to Next Step</button>
+                </div>
+            </form>
+            
+            <script>
+                // Auto-submit after a brief delay to show the processing message
+                setTimeout(function() {{
+                    document.getElementById('router-form').submit();
+                }}, 1000);
+            </script>
+        </body>
+        </html>
         '''
 
 
