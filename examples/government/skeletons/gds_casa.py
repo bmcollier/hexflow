@@ -27,29 +27,11 @@ class GDSCasaApp(CasaApp):
         form_config = self.form_config
         errors = errors or {}
         
-        # IMPORTANT: Only show validation errors after form submission, not on initial display
-        # or workflow navigation
-        should_show_errors = False
-        
-        if request.method == 'POST':
-            # Check if this POST contains data from THIS form (actual submission)
-            # vs. workflow navigation data from previous forms
-            form_data = dict(request.form)
-            expected_form_fields = {field['name'] for field in form_config.get('fields', [])}
-            submitted_form_fields = set(form_data.keys()) & expected_form_fields
-            
-            # Only show errors if this form's fields were actually submitted
-            should_show_errors = bool(submitted_form_fields)
-            
-        # If we shouldn't show errors, clear them
-        if not should_show_errors:
-            errors = {}
-            
         # Debug logging (remove in production)
         if errors:
             print(f"GDS DEBUG: Showing validation errors: {list(errors.keys())}")
 
-        # Build form fields HTML
+                # Build form fields HTML
         fields_html = []
         for field in form_config.get('fields', []):
             field_html = self.render_gds_field(field, errors.get(field['name'], ''))

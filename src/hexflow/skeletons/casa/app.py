@@ -69,37 +69,18 @@ class CasaApp(HTTPBaseApp):
                 if not submitted_form_fields:
                     # No form fields from this app are present - this is workflow navigation
                     print("DEBUG: Treating as workflow navigation - no validation")
-                    print("DEBUG: Calling render_form() with no errors")
-                    return self.render_form()
+                    return self.render_form()  # No errors passed = no validation errors shown
                 else:
                     # Form fields are present - this is an actual form submission
                     print("DEBUG: Treating as form submission - validating")
-                    return self.handle_form_submission()
+                    return self.handle_form_submission()  # This will call render_form(errors) if validation fails
     
     def render_form(self, errors: Dict[str, str] = None) -> str:
         """Render the form HTML."""
-        # Debug logging
         form_config = self.form_config
         errors = errors or {}
         
-        # IMPORTANT: Only show validation errors after actual form submission,
-        # not on initial GET or workflow navigation POST
-        should_show_errors = False
-        
-        if request.method == 'POST':
-            # Check if this POST contains data from THIS form (actual submission)
-            # vs. workflow navigation data from previous forms
-            form_data = dict(request.form)
-            expected_form_fields = {field['name'] for field in form_config.get('fields', [])}
-            submitted_form_fields = set(form_data.keys()) & expected_form_fields
-            
-            # Only show errors if this form's fields were actually submitted
-            should_show_errors = bool(submitted_form_fields)
-            
-        # If we shouldn't show errors, clear them
-        if not should_show_errors:
-            errors = {}
-            
+        # Debug logging
         if errors:
             print(f"BASE DEBUG: Showing validation errors: {list(errors.keys())}")
 
