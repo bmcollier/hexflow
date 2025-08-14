@@ -63,7 +63,11 @@ def init_workflow(directory_path: Path):
 # HEXFLOW HAS ALREADY BEEN INSTALLED IN THIS PYTHON ENVIRONMENT
 # YOU CAN FIND THE CODE FOR HEXFLOW AND ALL EXAMPLES IN THE INSTALLED LIBRARY INSIDE THE ENVIRONMENT"""
 
-    prompt_content = """Examine the files in this directory and follow their instructions in detail."""
+    prompt_content = """Examine the files in this directory and follow their instructions in detail.
+
+Note that if there is a skeletons directory, it will contain forms that must be subclassed incorporating their design elements in order to create the application, and a static directory containing all the necessary assets.
+
+If you find any other files called IMPORTANT.md, then read them and pay special attention to them."""
 
     example_spec_content = """# Workflow Description
 

@@ -273,33 +273,16 @@ class CasaApp(HTTPBaseApp):
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Processing...</title>
+            <title>Redirecting...</title>
             <meta charset="utf-8">
-            <style>
-                body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
-                .processing {{ margin: 20px 0; }}
-                .fallback {{ margin-top: 30px; padding: 20px; background: #f0f0f0; }}
-            </style>
         </head>
         <body>
-            <div class="processing">
-                <h2>Processing your submission...</h2>
-                <p>Please wait while we process your form and continue to the next step.</p>
-            </div>
-            
             <form id="router-form" action="http://localhost:8000/next" method="post">
                 {''.join(hidden_fields)}
-                <div class="fallback">
-                    <p><strong>If this page doesn't redirect automatically:</strong></p>
-                    <button type="submit" style="background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Continue to Next Step</button>
-                </div>
             </form>
             
             <script>
-                // Auto-submit after a brief delay to show the processing message
-                setTimeout(function() {{
-                    document.getElementById('router-form').submit();
-                }}, 1000);
+                document.getElementById('router-form').submit();
             </script>
         </body>
         </html>
