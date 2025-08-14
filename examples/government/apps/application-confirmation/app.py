@@ -17,9 +17,9 @@ class ApplicationConfirmationApp(GDSDisplayApp):
     """Application confirmation page using GDS styling."""
     
     def __init__(self, name="application-confirmation", host='localhost', port=8004):
-        super().__init__(name=name, host=host, port=port)
+        super().__init__(name=name, host=host, port=port, service_name="Apply for a library card")
     
-    def setup_display(self):
+    def setup_display(self, workflow_data=None):
         """Configure the confirmation display."""
         # Generate library card details
         library_card_number = f"LC{datetime.now().strftime('%Y')}{random.randint(100000, 999999)}"

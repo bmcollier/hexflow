@@ -14,13 +14,84 @@ from hexflow.skeletons.casa.app import CasaApp
 class GDSCasaApp(CasaApp):
     """Government Digital Service form-based application following GDS Design System."""
     
-    def __init__(self, name: str = "gds-casa-app", host: str = 'localhost', port: int = 8000):
+    def __init__(self, name: str = "gds-casa-app", host: str = 'localhost', port: int = 8000, service_name: str = None):
         super().__init__(name=name, host=host, port=port)
+        
+        # Set service name - default to a generic name if not provided
+        self.service_name = service_name or "Government Service"
         
         # Set up template folder for Jinja2
         template_dir = os.path.join(os.path.dirname(__file__), 'templates')
         if os.path.exists(template_dir):
             self.app.template_folder = template_dir
+        
+        # Set up static asset serving
+        self.setup_static_assets()
+    
+    def setup_static_assets(self):
+        """Set up routes to serve GOV.UK assets with proper MIME types."""
+        from flask import send_from_directory, make_response
+        import mimetypes
+        
+        assets_dir = os.path.join(os.path.dirname(__file__), 'assets')
+        
+        # Register font MIME types
+        mimetypes.add_type('font/woff2', '.woff2')
+        mimetypes.add_type('font/woff', '.woff')
+        mimetypes.add_type('application/font-woff2', '.woff2')
+        mimetypes.add_type('application/font-woff', '.woff')
+        
+        @self.app.route('/assets/<path:filename>')
+        def serve_casa_assets(filename):
+            return self._serve_asset_file(assets_dir, filename)
+        
+        @self.app.route('/stylesheets/<filename>')
+        def serve_stylesheets(filename):
+            return self._serve_asset_file(assets_dir, filename)
+        
+        @self.app.route('/javascripts/<filename>')
+        def serve_javascripts(filename):
+            # JavaScript file doesn't exist, return 404 with proper MIME type
+            from flask import abort
+            abort(404)
+        
+        @self.app.route('/assets/rebrand/<path:filename>')
+        def serve_rebrand_assets(filename):
+            # Rebrand assets don't exist, return 404 gracefully
+            from flask import abort
+            abort(404)
+    
+    def _serve_asset_file(self, assets_dir, filename):
+        """Helper method to serve asset files with proper MIME types."""
+        from flask import send_from_directory, make_response
+        
+        print(f"DEBUG: Serving asset {filename}")
+        try:
+            response = make_response(send_from_directory(assets_dir, filename))
+            
+            # Set proper MIME types
+            if filename.endswith('.woff2'):
+                response.headers['Content-Type'] = 'font/woff2'
+                response.headers['Access-Control-Allow-Origin'] = '*'
+            elif filename.endswith('.woff'):
+                response.headers['Content-Type'] = 'font/woff'
+                response.headers['Access-Control-Allow-Origin'] = '*'
+            elif filename.endswith('.css'):
+                response.headers['Content-Type'] = 'text/css'
+            elif filename.endswith('.js'):
+                response.headers['Content-Type'] = 'application/javascript'
+            elif filename.endswith('.png'):
+                response.headers['Content-Type'] = 'image/png'
+            elif filename.endswith('.svg'):
+                response.headers['Content-Type'] = 'image/svg+xml'
+            elif filename.endswith('.ico'):
+                response.headers['Content-Type'] = 'image/x-icon'
+            
+            print(f"DEBUG: Content-Type set to: {response.headers.get('Content-Type')}")
+            return response
+        except Exception as e:
+            print(f"ERROR serving {filename}: {e}")
+            raise
         
     def render_form(self, errors: Dict[str, str] = None) -> str:
         """Render the form HTML using GDS Design System styling."""
@@ -92,7 +163,7 @@ class GDSCasaApp(CasaApp):
                         </a>
                     </div>
                     <div class="govuk-header__content">
-                        <span class="govuk-header__product-name">Hexflow Service</span>
+                        <span class="govuk-header__product-name">{{ service_name }}</span>
                     </div>
                 </div>
             </header>
@@ -120,11 +191,7 @@ class GDSCasaApp(CasaApp):
                 </main>
             </div>
             
-            <!-- GOV.UK Frontend JavaScript -->
-            <script type="module">
-                import { initAll } from '/assets/javascripts/govuk-frontend.min.js'
-                initAll()
-            </script>
+            <!-- GOV.UK Frontend JavaScript would go here if available -->
         </body>
         </html>
         '''
@@ -138,12 +205,14 @@ class GDSCasaApp(CasaApp):
         
         # Try to use Jinja2 template, fall back to inline template if not found
         try:
+            print(f"DEBUG: Attempting to render gds_form.html with service_name: {self.service_name}")
             return render_template('gds_form.html',
                                 title=form_config.get('title', 'Government Service'),
                                 fields_html=fields_html,
                                 submit_text=form_config.get('submit_text', 'Continue'),
                                 app_name=self.name,
                                 workflow_token=workflow_token,
+                                service_name=self.service_name,
                                 govuk_css=govuk_css)
         except Exception as e:
             print(f"Jinja2 template not found, using inline template fallback: {e}")
@@ -154,6 +223,7 @@ class GDSCasaApp(CasaApp):
                                         submit_text=form_config.get('submit_text', 'Continue'),
                                         app_name=self.name,
                                         workflow_token=workflow_token,
+                                        service_name=self.service_name,
                                         govuk_css=govuk_css)
     
     def render_gds_field(self, field: Dict[str, Any], error: str = '') -> str:

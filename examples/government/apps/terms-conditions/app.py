@@ -15,7 +15,7 @@ class TermsConditionsApp(GDSCasaApp):
     """Terms and conditions acceptance using GDS styling."""
     
     def __init__(self, name="terms-conditions", host='localhost', port=8003):
-        super().__init__(name=name, host=host, port=port)
+        super().__init__(name=name, host=host, port=port, service_name="Apply for a library card")
     
     def setup_form(self):
         """Define terms and conditions form fields."""

@@ -15,7 +15,7 @@ class LibraryPreferencesApp(GDSCasaApp):
     """Library preferences selection using GDS styling."""
     
     def __init__(self, name="library-preferences", host='localhost', port=8002):
-        super().__init__(name=name, host=host, port=port)
+        super().__init__(name=name, host=host, port=port, service_name="Apply for a library card")
     
     def setup_form(self):
         """Define library preferences form fields."""

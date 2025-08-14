@@ -3,6 +3,7 @@
 import sys
 import os
 from flask import request, render_template_string, render_template
+from markupsafe import Markup
 from typing import Dict, List, Any, Optional
 
 # Add the parent directory to the path so we can import hexflow
@@ -14,18 +15,110 @@ from hexflow.skeletons.display.app import DisplayApp
 class GDSDisplayApp(DisplayApp):
     """Government Digital Service display application following GDS Design System."""
     
-    def __init__(self, name: str = "gds-display-app", host: str = 'localhost', port: int = 8000):
+    def __init__(self, name: str = "gds-display-app", host: str = 'localhost', port: int = 8000, service_name: str = None):
         super().__init__(name=name, host=host, port=port)
+        
+        # Set service name - default to a generic name if not provided
+        self.service_name = service_name or "Government Service"
         
         # Set up template folder for Jinja2
         template_dir = os.path.join(os.path.dirname(__file__), 'templates')
         if os.path.exists(template_dir):
             self.app.template_folder = template_dir
         
-    def render_display(self) -> str:
+        # Set up static asset serving
+        self.setup_static_assets()
+    
+    def setup_static_assets(self):
+        """Set up routes to serve GOV.UK assets with proper MIME types."""
+        from flask import send_from_directory, make_response
+        import mimetypes
+        
+        assets_dir = os.path.join(os.path.dirname(__file__), 'assets')
+        
+        # Register font MIME types
+        mimetypes.add_type('font/woff2', '.woff2')
+        mimetypes.add_type('font/woff', '.woff')
+        mimetypes.add_type('application/font-woff2', '.woff2')
+        mimetypes.add_type('application/font-woff', '.woff')
+        
+        @self.app.route('/assets/<path:filename>')
+        def serve_display_assets(filename):
+            return self._serve_asset_file(assets_dir, filename)
+        
+        @self.app.route('/stylesheets/<filename>')
+        def serve_stylesheets(filename):
+            return self._serve_asset_file(assets_dir, filename)
+        
+        @self.app.route('/javascripts/<filename>')
+        def serve_javascripts(filename):
+            # JavaScript file doesn't exist, return 404 with proper MIME type
+            from flask import abort
+            abort(404)
+        
+        @self.app.route('/assets/rebrand/<path:filename>')
+        def serve_rebrand_assets(filename):
+            # Rebrand assets don't exist, return 404 gracefully
+            from flask import abort
+            abort(404)
+    
+    def _serve_asset_file(self, assets_dir, filename):
+        """Helper method to serve asset files with proper MIME types."""
+        from flask import send_from_directory, make_response
+        
+        try:
+            response = make_response(send_from_directory(assets_dir, filename))
+            
+            # Set proper MIME types
+            if filename.endswith('.woff2'):
+                response.headers['Content-Type'] = 'font/woff2'
+                response.headers['Access-Control-Allow-Origin'] = '*'
+            elif filename.endswith('.woff'):
+                response.headers['Content-Type'] = 'font/woff'
+                response.headers['Access-Control-Allow-Origin'] = '*'
+            elif filename.endswith('.css'):
+                response.headers['Content-Type'] = 'text/css'
+            elif filename.endswith('.js'):
+                response.headers['Content-Type'] = 'application/javascript'
+            elif filename.endswith('.png'):
+                response.headers['Content-Type'] = 'image/png'
+            elif filename.endswith('.svg'):
+                response.headers['Content-Type'] = 'image/svg+xml'
+            elif filename.endswith('.ico'):
+                response.headers['Content-Type'] = 'image/x-icon'
+            
+            return response
+        except Exception as e:
+            print(f"ERROR serving {filename}: {e}")
+            raise
+    
+    def setup_routes(self):
+        """Setup display routes using GDS styling."""
+        
+        @self.app.route('/', methods=['GET', 'POST'])
+        def display_handler():
+            # Get workflow data from form data (POST) or URL parameters (GET)
+            if request.method == 'POST':
+                # Process form data properly - request.form is a MultiDict
+                workflow_data = {}
+                for key, value in request.form.items():
+                    workflow_data[key] = value
+            else:
+                workflow_data = dict(request.args)
+            
+            workflow_token = workflow_data.pop('workflow_token', '')
+            print(f"DEBUG: Workflow data received: {workflow_data}")
+            
+            # Call setup_display with workflow data
+            self.display_config = self.setup_display(workflow_data)
+            
+            # Use our custom GDS render method
+            return self.render_display(workflow_data)
+        
+    def render_display(self, workflow_data=None) -> str:
         """Render the display HTML using GDS Design System styling."""
         display_config = self.display_config
-        workflow_token = request.args.get('workflow_token', '')
+        workflow_data = workflow_data or {}
         
         # Build sections HTML
         sections_html = []
@@ -35,8 +128,8 @@ class GDSDisplayApp(DisplayApp):
         
         # Get workflow data if requested
         workflow_data_html = ''
-        if display_config.get('show_workflow_data', False) and workflow_token:
-            workflow_data_html = self.render_workflow_data()
+        if display_config.get('show_workflow_data', False):
+            workflow_data_html = self.render_workflow_data(workflow_data)
         
         # GDS-compliant template with 2025 rebrand
         template = '''
@@ -94,7 +187,7 @@ class GDSDisplayApp(DisplayApp):
                         </a>
                     </div>
                     <div class="govuk-header__content">
-                        <span class="govuk-header__product-name">Hexflow Service</span>
+                        <span class="govuk-header__product-name">{{ service_name }}</span>
                     </div>
                 </div>
             </header>
@@ -118,19 +211,22 @@ class GDSDisplayApp(DisplayApp):
                 </main>
             </div>
             
-            <!-- GOV.UK Frontend JavaScript -->
-            <script type="module">
-                import { initAll } from '/assets/javascripts/govuk-frontend.min.js'
-                initAll()
-            </script>
+            <!-- GOV.UK Frontend JavaScript would go here if available -->
         </body>
         </html>
         '''
         
         # Load GOV.UK Frontend CSS
         css_path = os.path.join(os.path.dirname(__file__), 'assets', 'govuk-frontend.min.css')
-        with open(css_path, 'r', encoding='utf-8') as f:
-            govuk_css = f.read()
+        try:
+            with open(css_path, 'r', encoding='utf-8') as f:
+                govuk_css = f.read()
+        except FileNotFoundError:
+            print(f"CSS file not found at {css_path}")
+            govuk_css = ""  # Fallback to no CSS
+        except Exception as e:
+            print(f"Error loading CSS: {e}")
+            govuk_css = ""
         
         # Try to use Jinja2 template, fall back to inline template if not found
         try:
@@ -139,16 +235,19 @@ class GDSDisplayApp(DisplayApp):
                                 sections_html=sections_html,
                                 workflow_data_html=workflow_data_html,
                                 completion_message=display_config.get('completion_message', 'Your application has been submitted.'),
+                                service_name=self.service_name,
                                 govuk_css=govuk_css)
         except Exception as e:
             print(f"Template error: {e}, falling back to inline template")
+            print(f"CSS length: {len(govuk_css)} characters")
             # Fallback to inline template
             return render_template_string(template,
                                         title=display_config.get('title', 'Application Complete'),
-                                        sections_html=''.join(sections_html),
-                                        workflow_data_html=workflow_data_html,
+                                        sections_html=Markup(''.join(sections_html)),
+                                        workflow_data_html=Markup(workflow_data_html),
                                         completion_message=display_config.get('completion_message', 'Your application has been submitted.'),
-                                        govuk_css=govuk_css)
+                                        service_name=self.service_name,
+                                        govuk_css=Markup(govuk_css))
     
     def render_gds_section(self, section: Dict[str, Any]) -> str:
         """Render a display section using GDS components."""
@@ -161,15 +260,15 @@ class GDSDisplayApp(DisplayApp):
                 label = item.get('label', 'Item')
                 value = item.get('value', '')
                 items_html.append(f'''
-                <tr class="govuk-summary-list__row">
+                <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">{label}</dt>
                     <dd class="govuk-summary-list__value">{value}</dd>
-                </tr>
+                </div>
                 ''')
             else:
                 items_html.append(f'<p class="govuk-body">{item}</p>')
         
-        if items_html and all('<tr' in item for item in items_html):
+        if items_html and all('<div' in item for item in items_html):
             # Summary list format for key-value pairs
             return f'''
             <h2 class="govuk-heading-l">{section_title}</h2>
@@ -189,14 +288,13 @@ class GDSDisplayApp(DisplayApp):
             <p class="govuk-body">No information to display.</p>
             '''
     
-    def render_workflow_data(self) -> str:
+    def render_workflow_data(self, workflow_data=None) -> str:
         """Render workflow data using GDS summary list component."""
-        workflow_token = request.args.get('workflow_token', '')
-        if not workflow_token:
+        # Use the workflow_data parameter passed from parent class
+        if workflow_data is None:
             return '<p class="govuk-body">No workflow data available.</p>'
         
-        # Get all workflow parameters passed to this app
-        workflow_params = dict(request.args)
+        workflow_params = dict(workflow_data)
         workflow_params.pop('workflow_token', None)  # Remove token from display
         
         if not workflow_params:
@@ -205,10 +303,15 @@ class GDSDisplayApp(DisplayApp):
         # Render as GDS summary list
         data_html = []
         for key, value in workflow_params.items():
-            if isinstance(value, list) and len(value) == 1:
-                value = value[0]  # Flatten single-item lists from URL params
+            # Handle different value types properly
+            if isinstance(value, list):
+                if len(value) == 1:
+                    value = value[0]  # Flatten single-item lists
+                else:
+                    value = ', '.join(str(v) for v in value)  # Join multiple values
             
-            # Skip empty values
+            # Convert to string and skip empty values
+            value = str(value).strip()
             if not value:
                 continue
                 
@@ -225,10 +328,10 @@ class GDSDisplayApp(DisplayApp):
                 value = str(value)[:100] + '...'
             
             data_html.append(f'''
-            <tr class="govuk-summary-list__row">
+            <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">{display_key}</dt>
                 <dd class="govuk-summary-list__value">{value}</dd>
-            </tr>
+            </div>
             ''')
         
         if not data_html:

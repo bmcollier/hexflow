@@ -15,7 +15,7 @@ class PersonalDetailsApp(GDSCasaApp):
     """Personal details collection for library card application using GDS styling."""
     
     def __init__(self, name="personal-details", host='localhost', port=8001):
-        super().__init__(name=name, host=host, port=port)
+        super().__init__(name=name, host=host, port=port, service_name="Apply for a library card")
     
     def setup_form(self):
         """Define personal details form fields."""
